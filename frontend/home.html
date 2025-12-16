@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Check My Paper - Turnitin Packages & Fast Checks</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    :root {
+      --bg-start: #0b1224;
+      --bg-end: #141b2f;
+      --accent: #7c3aed;
+      --accent-2: #22d3ee;
+      --card: rgba(255, 255, 255, 0.08);
+      --stroke: rgba(255, 255, 255, 0.14);
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: radial-gradient(circle at 20% 20%, rgba(124, 58, 237, 0.25), transparent 30%),
+                  radial-gradient(circle at 80% 10%, rgba(34, 211, 238, 0.25), transparent 30%),
+                  radial-gradient(circle at 50% 80%, rgba(56, 189, 248, 0.18), transparent 30%),
+                  linear-gradient(135deg, var(--bg-start), var(--bg-end));
+      min-height: 100vh;
+      color: var(--text);
+      position: relative;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 0% 0%, rgba(124, 58, 237, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 100% 100%, rgba(34, 211, 238, 0.05) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: -1;
+      animation: gradientShift 8s ease-in-out infinite;
+    }
+
+    @keyframes gradientShift {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    header {
+      background: rgba(17, 24, 39, 0.72);
+      padding: 1rem 2rem;
+      border-bottom: 1px solid var(--stroke);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(16px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      animation: slideDown 0.5s ease-out;
+      box-shadow: 0 8px 32px rgba(124, 58, 237, 0.1);
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      min-width: 200px;
+    }
+
+    .brand img {
+      height: 48px;
+      width: auto;
+      filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.35));
+      border-radius: 10px;
+      transition: all 0.3s ease;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .brand img:hover {
+      filter: drop-shadow(0 12px 30px rgba(124, 58, 237, 0.5));
+      transform: scale(1.05);
+    }
+
+    .brand-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+      line-height: 1.2;
+    }
+
+    .brand-name {
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+
+    .brand-sub {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    nav {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .nav-btn {
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nav-btn::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.4s ease;
+    }
+
+    .nav-btn:hover::after {
+      left: 100%;
+    }
+
+    .nav-btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .nav-btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 
+        0 12px 30px rgba(102, 126, 234, 0.5),
+        0 0 20px rgba(34, 211, 238, 0.2);
+    }
+
+    .nav-btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 2px solid var(--stroke);
+    }
+
+    .nav-btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: white;
+      border-color: rgba(255, 255, 255, 0.24);
+      transform: translateY(-2px);
+    }
+
+    .logout-btn {
+      background: #ff6b6b;
+      color: white;
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+    }
+
+    .logout-btn:hover {
+      background: #ff5252;
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(255, 107, 107, 0.5);
+    }
+
+    .hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: calc(100vh - 80px);
+      color: var(--text);
+      text-align: center;
+      padding: 2.5rem 1.5rem 3.5rem;
+      position: relative;
+      flex: 1;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(124, 58, 237, 0.15) 0%, transparent 70%);
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: pulse 4s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes pulse {
+      0%, 100% { 
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+      50% { 
+        transform: translate(-50%, -50%) scale(1.1);
+        opacity: 0.6;
+      }
+    }
+
+    .hero h2 {
+      font-size: 3.4rem;
+      margin: 0 0 1rem 0;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      animation: slideInDown 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+      background: linear-gradient(135deg, #ffffff 0%, var(--accent-2) 50%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: 0 0 30px rgba(124, 58, 237, 0.3);
+      position: relative;
+      z-index: 1;
+    }
+
+    @keyframes slideInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .hero p {
+      font-size: 1.15rem;
+      margin: 0 0 2.2rem 0;
+      max-width: 720px;
+      opacity: 0.9;
+      line-height: 1.7;
+      animation: slideInUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+      position: relative;
+      z-index: 1;
+    }
+
+    @keyframes slideInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.25rem;
+      margin: 2rem 0;
+      width: 100%;
+      max-width: 1100px;
+    }
+
+    .card {
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(34, 211, 238, 0.04) 100%);
+      border: 2px solid var(--stroke);
+      border-radius: 16px;
+      padding: 1.6rem;
+      box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.25),
+        inset 0 1px 2px rgba(255, 255, 255, 0.1);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      backdrop-filter: blur(10px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    .card:hover {
+      transform: translateY(-8px) scale(1.02);
+      border-color: rgba(124, 58, 237, 0.8);
+      box-shadow: 
+        0 30px 80px rgba(124, 58, 237, 0.35),
+        0 0 40px rgba(34, 211, 238, 0.2),
+        inset 0 1px 2px rgba(255, 255, 255, 0.2);
+    }
+
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    .card h3 {
+      margin: 0 0 0.35rem 0;
+      font-size: 1.2rem;
+      color: var(--accent-2);
+      animation: textGlow 2s ease-in-out infinite;
+    }
+
+    @keyframes textGlow {
+      0%, 100% {
+        text-shadow: 0 0 5px rgba(34, 211, 238, 0.3);
+      }
+      50% {
+        text-shadow: 0 0 15px rgba(34, 211, 238, 0.6);
+      }
+    }
+
+    .card .price {
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin: 0.2rem 0 0.6rem 0;
+      color: #fff;
+    }
+
+    .card .subtext {
+      color: var(--muted);
+      margin: 0.2rem 0 0.6rem 0;
+      font-size: 0.95rem;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.25) 0%, rgba(34, 211, 238, 0.15) 100%);
+      color: var(--accent-2);
+      border: 1.5px solid rgba(124, 58, 237, 0.5);
+      margin-bottom: 0.6rem;
+      animation: shimmer 3s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+      0%, 100% { 
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.25) 0%, rgba(34, 211, 238, 0.15) 100%);
+        box-shadow: 0 0 10px rgba(124, 58, 237, 0.2);
+      }
+      50% { 
+        background: linear-gradient(135deg, rgba(34, 211, 238, 0.25) 0%, rgba(124, 58, 237, 0.15) 100%);
+        box-shadow: 0 0 20px rgba(34, 211, 238, 0.4);
+      }
+    }
+
+    .list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .list li {
+      margin: 0.35rem 0;
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      transition: all 0.3s ease;
+    }
+
+    .list li:hover {
+      color: var(--accent-2);
+      transform: translateX(4px);
+    }
+
+    .section-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin: 3rem 0 0.5rem 0;
+      text-align: center;
+      background: linear-gradient(135deg, var(--accent-2), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .section-sub {
+      color: var(--muted);
+      text-align: center;
+      margin: 0.2rem 0 1.5rem 0;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 2rem;
+      flex-wrap: wrap;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cta-btn {
+      padding: 1rem 2.5rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      text-decoration: none;
+      display: inline-block;
+      position: relative;
+      overflow: hidden;
+      animation: fadeInScale 0.6s ease-out 0.2s both;
+    }
+
+    @keyframes fadeInScale {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .cta-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.5s ease;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .cta-btn:hover::before {
+      left: 100%;
+    }
+
+    .cta-btn-primary {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+      color: white;
+      box-shadow: 
+        0 15px 40px rgba(124, 58, 237, 0.35),
+        0 0 20px rgba(34, 211, 238, 0.2);
+    }
+
+    .cta-btn-primary:hover {
+      transform: translateY(-4px) scale(1.05);
+      box-shadow: 
+        0 20px 60px rgba(124, 58, 237, 0.5),
+        0 0 30px rgba(34, 211, 238, 0.4);
+    }
+
+    .cta-btn-secondary {
+      background: transparent;
+      color: white;
+      border: 2px solid rgba(255, 255, 255, 0.6);
+    }
+
+    .cta-btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: white;
+      transform: translateY(-4px);
+      border-color: white;
+      box-shadow: 0 15px 40px rgba(255, 255, 255, 0.15);
+    }
+
+    .dashboard-btn {
+      background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+      color: white;
+      box-shadow: 0 15px 30px rgba(46, 204, 113, 0.3);
+    }
+
+    .dashboard-btn:hover {
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 20px 40px rgba(46, 204, 113, 0.5);
+    }
+
+    /* Footer Styles */
+    .footer {
+      background: linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(11, 18, 36, 0.95) 100%);
+      border-top: 1px solid var(--stroke);
+      color: var(--text);
+      padding: 4rem 2rem 2rem;
+      margin-top: 6rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .footer-section {
+      animation: fadeInUp 0.6s ease-out forwards;
+      opacity: 0;
+    }
+
+    .footer-section:nth-child(1) { animation-delay: 0.1s; }
+    .footer-section:nth-child(2) { animation-delay: 0.2s; }
+    .footer-section:nth-child(3) { animation-delay: 0.3s; }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .footer-section h4 {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, var(--accent-2), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .footer-section p {
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+
+    .footer-links {
+      list-style: none;
+      padding: 0;
+    }
+
+    .footer-links li {
+      margin-bottom: 0.8rem;
+    }
+
+    .footer-links a {
+      color: var(--text);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .footer-links a:hover {
+      color: var(--accent-2);
+      transform: translateX(4px);
+    }
+
+    .footer-links a::before {
+      content: '→';
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .footer-links a:hover::before {
+      opacity: 1;
+    }
+
+    .discord-section {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .discord-section::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(124, 58, 237, 0.1) 0%, transparent 70%);
+      animation: floatAnimation 6s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes floatAnimation {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(10px, -10px); }
+    }
+
+    .discord-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem 1.5rem;
+      background: linear-gradient(135deg, rgba(88, 101, 242, 0.2) 0%, rgba(124, 58, 237, 0.2) 100%);
+      border: 2px solid rgba(88, 101, 242, 0.4);
+      border-radius: 12px;
+      color: #5865F2;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      position: relative;
+      margin: 1rem 0;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    .discord-link::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s ease;
+      z-index: -1;
+    }
+
+    .discord-link:hover::before {
+      left: 100%;
+    }
+
+    .discord-link:hover {
+      background: linear-gradient(135deg, rgba(88, 101, 242, 0.3) 0%, rgba(124, 58, 237, 0.3) 100%);
+      border-color: #5865F2;
+      box-shadow: 0 0 25px rgba(88, 101, 242, 0.5), inset 0 0 20px rgba(88, 101, 242, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .discord-icon {
+      width: 24px;
+      height: 24px;
+      animation: bounce 2s ease-in-out infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+
+    .discord-link:hover .discord-icon {
+      animation: spin 0.6s ease-in-out;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg) translateY(0); }
+      50% { transform: rotate(10deg) translateY(-3px); }
+      100% { transform: rotate(0deg) translateY(0); }
+    }
+
+    .discord-text {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .footer-bottom {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .hero h2 {
+        font-size: 2rem;
+      }
+
+      .hero p {
+        font-size: 1rem;
+      }
+
+      .cta-buttons {
+        flex-direction: column;
+        width: 100%;
+      }
+
+      .cta-btn {
+        width: 100%;
+      }
+
+      nav {
+        flex-direction: column;
+        width: 100%;
+      }
+
+      .nav-btn {
+        width: 100%;
+      }
+
+      .footer-content {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <img src="/uploads/logo.png" alt="Check My Paper logo" loading="lazy">
+      <div class="brand-copy">
+        <span class="brand-name">Check My Paper</span>
+        <span class="brand-sub">Plagiarism &amp; AI Detection</span>
+      </div>
+    </div>
+    <nav id="navMenu"></nav>
+  </header>
+
+  <div class="hero">
+    <div class="hero-logo" style="margin-bottom: 1.5rem; position: relative; z-index: 1;">
+      <img src="/uploads/logo.png" alt="Check My Paper logo" style="height: 120px; width: auto;">
+    </div>
+    <h2>Check My Paper</h2>
+    <p>Upload your work, redeem credits, and get expert responses fast. Secure uploads, instant tracking, and admin-managed feedback.</p>
+    <div class="cta-buttons" id="ctaButtons"></div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; align-items: center; padding: 0 1.5rem 4rem; position: relative; z-index: 1;">
+    <h3 class="section-title">Pick the Turnitin package that fits your needs</h3>
+    <p class="section-sub">Transparent pricing, instant delivery, and credits that never expire.</p>
+
+    <div class="grid">
+      <div class="card">
+        <span class="pill">Turnitin AI Checks</span>
+        <h3>Starter</h3>
+        <div class="price">1 Check → $4</div>
+        <ul class="list">
+          <li>✓ Great for quick single submissions</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="pill">Turnitin AI Checks</span>
+        <h3>Value</h3>
+        <div class="price">5 Checks → $16</div>
+        <div class="subtext">Save $4</div>
+        <ul class="list">
+          <li>✓ Best for weekly needs</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="pill">Turnitin AI Checks</span>
+        <h3>Pro</h3>
+        <div class="price">10 Checks → $30</div>
+        <div class="subtext">Save $10</div>
+        <ul class="list">
+          <li>✓ Ideal for frequent submissions</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="pill">Turnitin AI Checks</span>
+        <h3>Team</h3>
+        <div class="price">20 Checks → $60</div>
+        <div class="subtext">Save $30</div>
+        <ul class="list">
+          <li>✓ Perfect for small teams</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="pill">Turnitin AI Checks</span>
+        <h3>Scale</h3>
+        <div class="price">50 Checks → $120</div>
+        <div class="subtext">Save $80</div>
+        <ul class="list">
+          <li>✓ Best value for heavy usage</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 class="section-title">Unlimited Plans (Paused)</h3>
+    <p class="section-sub">Unlimited plans are temporarily paused; service may delay during maintenance.</p>
+    <div class="grid">
+      <div class="card">
+        <span class="pill">Paused</span>
+        <h3>Unlimited 1 Week</h3>
+        <div class="price">$40</div>
+        <ul class="list">
+          <li>✓ 2 checks per day</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="pill">Paused</span>
+        <h3>Unlimited 1 Month</h3>
+        <div class="price">$100</div>
+        <ul class="list">
+          <li>✓ 5 checks per day</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 class="section-title">Payments</h3>
+    <p class="section-sub">PayPal or Crypto (USDT, BTC, ETH, USDC). Payment details are shared after opening a ticket.</p>
+
+    <h3 class="section-title">Our Guarantee</h3>
+    <div class="grid">
+      <div class="card">
+        <ul class="list">
+          <li>✓ Results within 20 minutes</li>
+          <li>✓ Available 18 hours worldwide</li>
+          <li>✓ No repository guaranteed</li>
+          <li>✓ Optimized specifically for Turnitin</li>
+          <li>✓ Credits never expire</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 class="section-title">File Requirements for Turnitin AI Check</h3>
+    <div class="grid">
+      <div class="card">
+        <ul class="list">
+          <li>→ File size less than 10 MB</li>
+          <li>→ More than 350 words; under 30,000 words</li>
+          <li>→ Languages: English, Spanish, or Japanese</li>
+          <li>→ Accepted: .docx, .pdf, .doc</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h4>About Us</h4>
+        <p>Your trusted partner for plagiarism and AI detection. Get instant results with our secure platform.</p>
+      </div>
+      <div class="footer-section">
+        <h4>Quick Links</h4>
+        <ul class="footer-links">
+          <li><a href="/login.html">Login</a></li>
+          <li><a href="/register.html">Register</a></li>
+          <li><a href="/home.html">Home</a></li>
+        </ul>
+      </div>
+      <div class="footer-section discord-section">
+        <h4>Join Our Community</h4>
+        <a href="https://discord.gg/7WbyvTWKk" target="_blank" class="discord-link">
+          <svg class="discord-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20.317 4.3671C18.7933 3.6728 17.1471 3.1667 15.3917 2.9083C15.1586 3.3249 14.8861 3.9062 14.7077 4.3604C12.8436 4.0574 11.0012 4.0574 9.17651 4.3604C8.99788 3.9062 8.71504 3.3249 8.48174 2.9083C6.72638 3.1667 5.07968 3.6728 3.55618 4.3671C0.50654 8.6849 -0.309292 12.8749 0.0959302 16.9983C2.25383 18.6975 4.36989 19.637 6.44694 20.1918C6.97353 19.4383 7.43392 18.6255 7.81705 17.7576C7.08711 17.4887 6.39157 17.1443 5.74328 16.7306C5.89892 16.6174 6.05118 16.5001 6.19975 16.3799C9.70167 18.0602 13.5909 18.0602 17.0523 16.3799C17.2009 16.5001 17.3531 16.6174 17.5088 16.7306C16.8605 17.1443 16.165 17.4887 15.435 17.7576C15.8182 18.6255 16.2786 19.4383 16.8052 20.1918C18.8822 19.637 21.0083 18.6975 23.1661 16.9983C23.6349 12.3193 22.3884 8.1361 20.317 4.3671ZM8.02207 14.3031C6.8375 14.3031 5.86314 13.2474 5.86314 11.9504C5.86314 10.6534 6.8184 9.59772 8.02207 9.59772C9.22575 9.59772 10.1831 10.6534 10.1831 11.9504C10.1831 13.2474 9.22575 14.3031 8.02207 14.3031ZM15.9779 14.3031C14.7933 14.3031 13.8189 13.2474 13.8189 11.9504C13.8189 10.6534 14.7742 9.59772 15.9779 9.59772C17.1815 9.59772 18.1389 10.6534 18.1389 11.9504C18.1389 13.2474 17.1815 14.3031 15.9779 14.3031Z"/>
+          </svg>
+          <span>Join Discord Community</span>
+        </a>
+        <p class="discord-text">Connect with thousands of users, share experiences, and get support</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2025 Check My Paper. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    const token = localStorage.getItem('token');
+    const currentUser = localStorage.getItem('currentUser') ? JSON.parse(localStorage.getItem('currentUser')) : null;
+
+    const navMenu = document.getElementById('navMenu');
+    const ctaButtons = document.getElementById('ctaButtons');
+
+    if (token && currentUser) {
+      // User is logged in
+      navMenu.innerHTML = `
+        <span style="color: #667eea; font-weight: 600;">Hi, ${currentUser.username}!</span>
+        <button class="nav-btn nav-btn-primary" onclick="window.location.href = currentUser.isAdmin ? '/admin/dashboard.html' : '/index.html'">
+          ${currentUser.isAdmin ? '👨‍💼 Admin Dashboard' : '📊 Dashboard'}
+        </button>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      `;
+
+      ctaButtons.innerHTML = `
+        <a href="${currentUser.isAdmin ? '/admin/dashboard.html' : '/index.html'}" class="cta-btn cta-btn-primary dashboard-btn">
+          ${currentUser.isAdmin ? 'Go to Admin Panel' : 'Go to Dashboard'}
+        </a>
+      `;
+    } else {
+      // User is not logged in
+      navMenu.innerHTML = `
+        <button class="nav-btn nav-btn-secondary" onclick="window.location.href = '/login.html'">Login</button>
+        <button class="nav-btn nav-btn-primary" onclick="window.location.href = '/register.html'">Register</button>
+      `;
+
+      ctaButtons.innerHTML = `
+        <button class="cta-btn cta-btn-primary" onclick="window.location.href = '/login.html'">Login</button>
+        <button class="cta-btn cta-btn-secondary" onclick="window.location.href = '/register.html'">Create Account</button>
+      `;
+    }
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = '/home.html';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Ecommerce Credit</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>📚 Ecommerce Credit</h1>
+    <div class="user-info">
+      <div class="checks-display">
+        <span class="checks-icon">💳</span>
+        <span id="username">User</span>: 
+        <span id="checksAmount">0</span> Credits
+      </div>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div id="message" class="message"></div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="browse">Services</button>
+      <button class="tab-btn" data-tab="redeem">Redeem Code</button>
+      <button class="tab-btn" data-tab="orders">My Orders</button>
+    </div>
+
+    <!-- Browse Books Tab -->
+    <div id="browse" class="tab-content active">
+      <h2>Available Services</h2>
+      <div id="booksGrid" class="grid"></div>
+    </div>
+
+    <!-- Redeem Code Tab -->
+    <div id="redeem" class="tab-content">
+      <h2>Redeem Credits Code</h2>
+      <div class="form-group">
+        <label for="codeInput">Enter Code:</label>
+        <div style="display: flex; gap: 1rem;">
+          <input type="text" id="codeInput" placeholder="Enter your code">
+          <button onclick="redeemCode()">Redeem</button>
+        </div>
+      </div>
+      <p style="color: #666; margin-top: 1rem;">
+        Redeem valid codes to get virtual currency (Credits) to purchase services.
+      </p>
+    </div>
+
+    <!-- My Orders Tab -->
+    <div id="orders" class="tab-content">
+      <h2>My Orders</h2>
+      <div id="userOrdersContainer"></div>
+    </div>
+  </div>
+
+  <!-- Buy Modal -->
+  <div id="buyModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000;">
+    <div style="background: white; border-radius: 10px; padding: 2rem; max-width: 500px; width: 100%;">
+      <h2>Purchase Service</h2>
+      <p style="margin-bottom: 1rem; color: #666;">
+        <strong>Service:</strong> <span id="selectedBookTitle"></span><br>
+        <strong>Price:</strong> <span id="selectedBookPrice"></span> Credits
+      </p>
+      
+      <div class="form-group">
+        <label for="uploadFile">Upload File (Required):</label>
+        <input type="file" id="uploadFile" accept=".pdf,.doc,.docx,.txt,.zip" required>
+        <small style="color: #999;">A file is required for this service. The admin can then upload a response file.</small>
+      </div>
+
+      <div id="uploadProgress" style="display: none; margin-bottom: 1rem;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+          <span style="font-size: 0.9rem; font-weight: bold;">Uploading...</span>
+          <span id="uploadProgressText" style="font-size: 0.9rem;">0%</span>
+        </div>
+        <progress id="uploadProgressBar" value="0" max="100" style="width: 100%; height: 8px; border-radius: 4px;"></progress>
+      </div>
+
+      <input type="hidden" id="selectedBookId">
+
+      <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+        <button class="btn-secondary" id="cancelBuyBtn" onclick="closeBuyModal()">Cancel</button>
+        <button class="btn-success" id="confirmPurchaseBtn" onclick="submitOrder()">Confirm Purchase</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

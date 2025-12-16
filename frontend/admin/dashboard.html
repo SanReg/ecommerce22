@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Ecommerce Credit</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header>
+    <h1>👨‍💼 Admin Dashboard</h1>
+    <div class="user-info">
+      <span style="color: white; font-weight: bold;">Admin: <span id="adminName">Admin</span></span>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div id="message" class="message"></div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="orders">Manage Orders</button>
+      <button class="tab-btn" data-tab="users">Users & Credits</button>
+      <button class="tab-btn" data-tab="codes">Codes</button>
+    </div>
+
+    <!-- Manage Orders Tab -->
+    <div id="orders" class="tab-content active">
+      <h2>All Orders</h2>
+      <p style="color: #666; margin-bottom: 1.5rem;">
+        View all user orders, mark them as complete, and upload response files.
+      </p>
+      <div id="allOrdersContainer"></div>
+    </div>
+
+    <!-- Users & Checks Tab -->
+    <div id="users" class="tab-content">
+      <h2>Users Overview</h2>
+      <p style="color: #666; margin-bottom: 1.5rem;">
+        View all users, their checks balance, and order history.
+      </p>
+      <div id="allUsersContainer"></div>
+    </div>
+
+    <!-- Codes Tab -->
+    <div id="codes" class="tab-content">
+      <h2>Generate Redemption Codes</h2>
+      <p style="color: #666; margin-bottom: 1.5rem;">
+        Create single-use codes for users to redeem checks. Codes can be custom or auto-generated.
+      </p>
+
+      <form id="generateCodeForm" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; align-items: flex-end; margin-bottom: 1.5rem;">
+        <div class="form-group">
+          <label for="checksAmountInput">Checks Amount</label>
+          <input type="number" id="checksAmountInput" min="1" placeholder="e.g. 100" required>
+        </div>
+
+        <div class="form-group">
+          <label for="customCodeInput">Custom Code (optional)</label>
+          <input type="text" id="customCodeInput" placeholder="e.g. SPRING50">
+        </div>
+
+        <div>
+          <button type="submit" class="btn-success" style="width: 100%;">Generate Code</button>
+        </div>
+      </form>
+
+      <div id="codesContainer"></div>
+    </div>
+  </div>
+
+  <script src="../admin/admin.js"></script>
+</body>
+</html>
