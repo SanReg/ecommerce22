@@ -150,7 +150,7 @@ function displayAllOrders(orders) {
         <div style="padding: 0.9rem 1rem; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px; color: #7f1d1d; margin-bottom: 1rem;">
           <p style="margin: 0 0 0.4rem 0; font-size: 0.9rem; font-weight: 700;">❌ Order Failed</p>
           <p style="margin: 0; font-size: 0.9rem;">Reason: <strong>${order.failureReason || 'Not specified'}</strong></p>
-          <p style="margin: 0.4rem 0 0 0; font-size: 0.9rem; color: #1f2937;">💳 Credits Refunded: <strong>${order.refundAmount || order.checksUsed}</strong></p>
+          <p style="margin: 0.4rem 0 0 0; font-size: 0.9rem; color: #1f2937;">� Credits Refunded: <strong>${order.refundAmount || order.checksUsed}</strong></p>
           ${order.refundedAt ? `<p style="margin: 0.2rem 0 0 0; font-size: 0.85rem; color: #6b7280;">Refunded: ${new Date(order.refundedAt).toLocaleString()}</p>` : ''}
         </div>
         ` : ''}
@@ -639,6 +639,9 @@ function displayCodes(codes) {
           <span style="color: ${statusColor}; font-size: 0.9rem;">${code.isUsed ? '✓ Redeemed' : '⏳ Waiting'}</span>
         </div>
         
+          <button onclick="copyToClipboard('${code.code}', this)" style="width: 100%; padding: 0.7rem; background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 1rem; transition: all 0.3s ease; font-size: 0.95rem;">
+            📋 Copy Code
+          </button>
         <div style="display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.9rem; color: #555;">
           ${code.isUsed ? `
             <div>
@@ -661,6 +664,21 @@ function displayCodes(codes) {
 
   html += '</div>';
   container.innerHTML = html;
+}
+
+function copyToClipboard(code, button) {
+  navigator.clipboard.writeText(code).then(() => {
+    const originalText = button.innerHTML;
+    button.innerHTML = '✓ Copied!';
+    button.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+    
+    setTimeout(() => {
+      button.innerHTML = originalText;
+      button.style.background = 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)';
+    }, 2000);
+  }).catch(() => {
+    showMessage('Failed to copy code', 'error');
+  });
 }
 
 async function createRedemptionCode(event) {

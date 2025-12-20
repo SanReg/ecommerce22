@@ -96,12 +96,12 @@ function displayServices() {
     <div style="margin-bottom: 1.5rem;">
       <div style="font-size: 2.5rem; margin-bottom: 1rem;">🔍</div>
       <h3 style="font-size: 1.3rem; margin-bottom: 0.75rem; color: var(--text-primary);">TurnItIn Check</h3>
-      <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">Get a plagiarism similarity report. File upload required.</p>
+      <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">Get a plagiarism similarity and AI report. We provide similarity and AI detection reports generated through Turnitin, helping you review your work before final submission. File upload required. <br><em>Files are not stored in Turnitin!<em></p>
     </div>
     <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid var(--card-border);">
-      <span style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem;">💳 1 Credit</span>
+      <span style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem;">💎 1 Credit</span>
       ${turnitinAvailable
-        ? `<button onclick="openBuyModal('${turnitin._id}', 'TurnItIn Check', 1)" style="background: linear-gradient(135deg, var(--primary) 0%, #7c3aca 100%); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">Order Now →</button>`
+        ? `<button onclick="openBuyModal('${turnitin._id}', 'TurnItIn Check', 1)" style="background: linear-gradient(135deg, var(--primary) 0%, #7c3aca 100%); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">Submit Now →</button>`
         : `<button disabled style="opacity: 0.5; cursor: not-allowed; background: #666; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: 600;">Unavailable</button>`}
     </div>
   `;
@@ -126,8 +126,8 @@ function displayServices() {
   cardAssignment.innerHTML = `
     <div style="margin-bottom: 1.5rem;">
       <div style="font-size: 2.5rem; margin-bottom: 1rem;">💬</div>
-      <h3 style="font-size: 1.3rem; margin-bottom: 0.75rem; color: var(--text-primary);">Assignment Help</h3>
-      <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">Get personalized assistance for your assignment on Discord.</p>
+      <h3 style="font-size: 1.3rem; margin-bottom: 0.75rem; color: var(--text-primary);">Full Assignment Help</h3>
+      <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">Assignments are written 100% by human experts from scratch, with 0% AI detection on Turnitin. Includes complete research, proper structure, and full citations (APA / MLA / Harvard).</p>
     </div>
     <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid var(--card-border);">
       <span style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem;">✨ Inquire</span>
@@ -156,7 +156,8 @@ function displayServices() {
     <div style="margin-bottom: 1.5rem;">
       <div style="font-size: 2.5rem; margin-bottom: 1rem;">✏️</div>
       <h3 style="font-size: 1.3rem; margin-bottom: 0.75rem; color: var(--text-primary);">Rewrite</h3>
-      <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">Request a rewrite or polishing via Discord.</p>
+      <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">We rewrite your document 100% manually by a human writer, ensuring 0% AI detection on Turnitin.
+A Turnitin report is provided along with the final rewritten file.</p>
     </div>
     <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid var(--card-border);">
       <span style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem;">✨ Inquire</span>
@@ -345,7 +346,7 @@ function displayUserOrders(orders) {
           <div style="padding: 1rem; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px; color: #7f1d1d;">
             <p style="margin: 0 0 0.4rem 0; font-size: 0.9rem; font-weight: 600;">❌ Order Failed</p>
             <p style="margin: 0; font-size: 0.9rem;">Reason: ${order.failureReason || 'Not specified'}</p>
-            <p style="margin: 0.4rem 0 0 0; font-size: 0.9rem; color: #1f2937;">💳 Credits Refunded: <strong>${order.refundAmount || order.checksUsed}</strong></p>
+            <p style="margin: 0.4rem 0 0 0; font-size: 0.9rem; color: #1f2937;">� Credits Refunded: <strong>${order.refundAmount || order.checksUsed}</strong></p>
           </div>
         ` : `
           <div style="padding: 1rem; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; color: #92400e;">
