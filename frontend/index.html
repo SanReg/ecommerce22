@@ -2,13 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - Ecommerce Credit</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Dashboard - CheckMyPaper</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <header>
-    <h1>📚 Ecommerce Credit</h1>
+    <h1>📚 CheckMyPaper</h1>
     <div class="user-info">
       <div class="checks-display">
         <span class="checks-icon">💳</span>
@@ -23,67 +25,102 @@
     <div id="message" class="message"></div>
 
     <div class="tabs">
-      <button class="tab-btn active" data-tab="browse">Services</button>
-      <button class="tab-btn" data-tab="redeem">Redeem Code</button>
-      <button class="tab-btn" data-tab="orders">My Orders</button>
+      <button class="tab-btn active" data-tab="browse">📚 Services</button>
+      <button class="tab-btn" data-tab="redeem">💎 Redeem Credits</button>
+      <button class="tab-btn" data-tab="orders">📋 Orders</button>
     </div>
 
-    <!-- Browse Books Tab -->
+    <!-- Browse Services Tab -->
     <div id="browse" class="tab-content active">
       <h2>Available Services</h2>
+      <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem;">
+        Browse our premium services and purchase using your credits.
+      </p>
       <div id="booksGrid" class="grid"></div>
     </div>
 
     <!-- Redeem Code Tab -->
     <div id="redeem" class="tab-content">
-      <h2>Redeem Credits Code</h2>
-      <div class="form-group">
-        <label for="codeInput">Enter Code:</label>
-        <div style="display: flex; gap: 1rem;">
-          <input type="text" id="codeInput" placeholder="Enter your code">
-          <button onclick="redeemCode()">Redeem</button>
+      <h2>Redeem Credits</h2>
+      <div style="max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%); border: 1px solid var(--card-border); border-radius: 12px; padding: 2rem; margin-bottom: 2rem;">
+          <h3 style="margin-bottom: 1.5rem; font-size: 1.2rem;">Redeem Credits</h3>
+          <div class="form-group">
+            <label for="codeInput">Enter Code:</label>
+            <div id="redeemInputWrapper" style="display: flex; gap: 1rem; margin-top: 0.75rem;">
+              <input type="text" id="codeInput" placeholder="Enter your code" style="flex: 1; min-width: 0;">
+              <button onclick="redeemCode()" class="btn-primary" style="white-space: nowrap;">Redeem Credits →</button>
+            </div>
+          </div>
+          <p style="color: var(--text-secondary); margin-top: 1.5rem; font-size: 0.9rem;">
+            Redeem valid codes to get virtual currency (Credits) to purchase services.
+          </p>
+        </div>
+        
+        <!-- Discord Purchase Info -->
+        <div style="background: linear-gradient(135deg, rgba(88, 101, 242, 0.15) 0%, rgba(114, 137, 218, 0.15) 100%); border: 2px solid rgba(88, 101, 242, 0.3); border-radius: 12px; padding: 1.75rem; display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+          <div style="font-size: 3rem; line-height: 1;">💬</div>
+          <div style="flex: 1; min-width: 200px;">
+            <h4 style="margin: 0 0 0.5rem 0; color: var(--text-primary); font-size: 1.1rem;">Need More Credits?</h4>
+            <p style="margin: 0; color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">Join our Discord server to purchase additional credits and get support.</p>
+          </div>
+          <a href="https://discord.gg/checkmypaper" target="_blank" rel="noopener" style="background: linear-gradient(135deg, #5865f2 0%, #7289da 100%); color: white; text-decoration: none; padding: 0.85rem 1.75rem; border-radius: 8px; font-weight: 600; font-size: 0.95rem; white-space: nowrap; box-shadow: 0 4px 12px rgba(88, 101, 242, 0.3); transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 0.5rem;">
+            <svg width="20" height="20" viewBox="0 0 71 55" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: brightness(0) invert(1);">
+              <path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.41542C45.5603 0.39851 45.468 0.440769 45.4204 0.525289C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4046 32.7345 3.4046 27.3892 4.2216C26.905 3.0581 26.1886 1.6353 25.5617 0.525289C25.5141 0.443589 25.4218 0.40133 25.3294 0.41542C20.2584 1.2888 15.4057 2.8186 10.8776 4.8978C10.8384 4.9147 10.8048 4.9429 10.7825 4.9795C1.57795 18.7309 -0.943561 32.1443 0.293408 45.3914C0.299005 45.4562 0.335386 45.5182 0.385761 45.5576C6.45866 50.0174 12.3413 52.7249 18.1147 54.5195C18.2071 54.5477 18.305 54.5139 18.3638 54.4378C19.7295 52.5728 20.9469 50.6063 21.9907 48.5383C22.0523 48.4172 21.9935 48.2735 21.8676 48.2256C19.9366 47.4931 18.0979 46.6 16.3292 45.5858C16.1893 45.5041 16.1781 45.304 16.3068 45.2082C16.679 44.9293 17.0513 44.6391 17.4067 44.3461C17.471 44.2926 17.5606 44.2813 17.6362 44.3151C29.2558 49.6202 41.8354 49.6202 53.3179 44.3151C53.3935 44.2785 53.4831 44.2898 53.5502 44.3433C53.9057 44.6363 54.2779 44.9293 54.6529 45.2082C54.7816 45.304 54.7732 45.5041 54.6333 45.5858C52.8646 46.6197 51.0259 47.4931 49.0921 48.2228C48.9662 48.2707 48.9102 48.4172 48.9718 48.5383C50.038 50.6034 51.2554 52.5699 52.5959 54.435C52.6519 54.5139 52.7526 54.5477 52.845 54.5195C58.6464 52.7249 64.529 50.0174 70.6019 45.5576C70.6551 45.5182 70.6887 45.459 70.6943 45.3942C72.1747 30.0791 68.2147 16.7757 60.1968 4.9823C60.1772 4.9429 60.1437 4.9147 60.1045 4.8978ZM23.7259 37.3253C20.2276 37.3253 17.3451 34.1136 17.3451 30.1693C17.3451 26.225 20.1717 23.0133 23.7259 23.0133C27.308 23.0133 30.1626 26.2532 30.1066 30.1693C30.1066 34.1136 27.28 37.3253 23.7259 37.3253ZM47.3178 37.3253C43.8196 37.3253 40.9371 34.1136 40.9371 30.1693C40.9371 26.225 43.7636 23.0133 47.3178 23.0133C50.9 23.0133 53.7545 26.2532 53.6986 30.1693C53.6986 34.1136 50.9 37.3253 47.3178 37.3253Z" fill="white"/>
+            </svg>
+            Join Discord Server
+          </a>
         </div>
       </div>
-      <p style="color: #666; margin-top: 1rem;">
-        Redeem valid codes to get virtual currency (Credits) to purchase services.
-      </p>
     </div>
 
     <!-- My Orders Tab -->
     <div id="orders" class="tab-content">
       <h2>My Orders</h2>
+      <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem;">
+        Track your service orders and download responses from admins.
+      </p>
       <div id="userOrdersContainer"></div>
     </div>
   </div>
 
   <!-- Buy Modal -->
-  <div id="buyModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000;">
-    <div style="background: white; border-radius: 10px; padding: 2rem; max-width: 500px; width: 100%;">
-      <h2>Purchase Service</h2>
-      <p style="margin-bottom: 1rem; color: #666;">
-        <strong>Service:</strong> <span id="selectedBookTitle"></span><br>
-        <strong>Price:</strong> <span id="selectedBookPrice"></span> Credits
-      </p>
+  <div id="buyModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 1000; padding: 1rem;">
+    <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(2, 6, 23, 0.95) 100%); border: 1px solid rgba(100, 116, 139, 0.3); border-radius: 16px; padding: 2.5rem; max-width: 500px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.4);">
+      <h2 style="color: var(--text-primary); margin-bottom: 1.5rem; font-size: 1.5rem;">🛒 Purchase Service</h2>
       
-      <div class="form-group">
-        <label for="uploadFile">Upload File (Required):</label>
-        <input type="file" id="uploadFile" accept=".pdf,.doc,.docx,.txt,.zip" required>
-        <small style="color: #999;">A file is required for this service. The admin can then upload a response file.</small>
+      <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%); border: 1px solid var(--card-border); border-radius: 10px; padding: 1.5rem; margin-bottom: 2rem;">
+        <div style="display: grid; gap: 0.75rem;">
+          <div>
+            <span style="color: var(--text-secondary); font-size: 0.9rem;">Service</span>
+            <p style="color: var(--text-primary); font-weight: 600; font-size: 1.1rem; margin-top: 0.25rem;"><span id="selectedBookTitle"></span></p>
+          </div>
+          <div style="border-top: 1px solid var(--card-border); padding-top: 0.75rem;">
+            <span style="color: var(--text-secondary); font-size: 0.9rem;">Price</span>
+            <p style="color: var(--success); font-weight: 700; font-size: 1.2rem; margin-top: 0.25rem;">💳 <span id="selectedBookPrice"></span> Credits</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-group" style="margin-bottom: 1.5rem;">
+        <label for="uploadFile" style="color: var(--text-primary); font-weight: 600; margin-bottom: 0.75rem; display: block;">📎 Upload File (Required)</label>
+        <input type="file" id="uploadFile" accept=".pdf,.doc,.docx,.txt,.zip" required style="background: rgba(99, 102, 241, 0.1); color: var(--text-primary); border: 1px solid var(--card-border); padding: 1rem; border-radius: 8px; width: 100%; cursor: pointer;">
+        <small style="color: var(--text-secondary); margin-top: 0.5rem; display: block;">A file is required for this service. The admin can then upload a response file.</small>
       </div>
 
-      <div id="uploadProgress" style="display: none; margin-bottom: 1rem;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-          <span style="font-size: 0.9rem; font-weight: bold;">Uploading...</span>
-          <span id="uploadProgressText" style="font-size: 0.9rem;">0%</span>
+      <div id="uploadProgress" style="display: none; margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+          <span style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary);">Uploading your file...</span>
+          <span id="uploadProgressText" style="font-size: 0.9rem; color: var(--primary); font-weight: 600;">0%</span>
         </div>
-        <progress id="uploadProgressBar" value="0" max="100" style="width: 100%; height: 8px; border-radius: 4px;"></progress>
+        <progress id="uploadProgressBar" value="0" max="100" style="width: 100%; height: 6px; border-radius: 3px; background: rgba(99, 102, 241, 0.2); border: none;"></progress>
       </div>
 
       <input type="hidden" id="selectedBookId">
 
       <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-        <button class="btn-secondary" id="cancelBuyBtn" onclick="closeBuyModal()">Cancel</button>
-        <button class="btn-success" id="confirmPurchaseBtn" onclick="submitOrder()">Confirm Purchase</button>
+        <button id="cancelBuyBtn" onclick="closeBuyModal()" style="background: transparent; color: var(--text-secondary); border: 1px solid var(--card-border); padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">Cancel</button>
+        <button id="confirmPurchaseBtn" onclick="submitOrder()" style="background: linear-gradient(135deg, var(--success) 0%, #059669 100%); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">Confirm Purchase</button>
       </div>
     </div>
   </div>

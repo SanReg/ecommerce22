@@ -51,12 +51,13 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Email and password are required' });
     }
     
-    const user = await User.findOne({ email });
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
     
-    const isMatch = await user.comparePassword(password);
+    const isMatch = await user.comparePassword(String(password));
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }

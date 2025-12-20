@@ -48,6 +48,14 @@ app.get('/admin/dashboard.html', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/admin/dashboard.html'));
 });
 
+// 404 fallback for unknown API routes - return JSON, not HTML
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ message: 'Not found', path: req.originalUrl });
+  }
+  next();
+});
+
 // Error handling
 app.use((err, req, res, next) => {
   console.error(err.stack);

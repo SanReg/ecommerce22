@@ -33,7 +33,7 @@ router.post('/create', authMiddleware, async (req, res) => {
     const file = req.files.file;
     const result = await uploadBuffer(file.data, file.name, 'ecommerce-orders');
     const userFile = {
-      filename: file.name,
+      filename: result.public_id.split('/').pop(), // Use the renamed filename from Cloudinary
       url: result.secure_url,
       secure_url: result.secure_url,
       public_id: result.public_id,

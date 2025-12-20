@@ -21,6 +21,20 @@ const orderSchema = new mongoose.Schema({
     public_id: String,
     uploadedAt: Date
   },
+  adminFiles: {
+    aiReport: {
+      filename: String,
+      url: String,
+      public_id: String,
+      uploadedAt: Date
+    },
+    similarityReport: {
+      filename: String,
+      url: String,
+      public_id: String,
+      uploadedAt: Date
+    }
+  },
   adminFile: {
     filename: String,
     url: String,
@@ -29,10 +43,22 @@ const orderSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'completed'],
+    enum: ['pending', 'completed', 'failed'],
     default: 'pending'
   },
   completedAt: {
+    type: Date,
+    default: null
+  },
+  failureReason: {
+    type: String,
+    default: null
+  },
+  refundAmount: {
+    type: Number,
+    default: 0
+  },
+  refundedAt: {
     type: Date,
     default: null
   },

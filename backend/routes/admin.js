@@ -5,6 +5,7 @@ const Book = require('../models/Book');
 const RedemptionCode = require('../models/RedemptionCode');
 const { authMiddleware, adminMiddleware } = require('../middleware/auth');
 const { uploadBuffer, cloudinary } = require('../utils/cloudinary');
+const bcrypt = require('bcryptjs');
 const router = express.Router();
 
 function generateCodeString() {
@@ -49,6 +50,53 @@ router.put('/orders/:id/complete', authMiddleware, adminMiddleware, async (req, 
   }
 });
 
+// Mark order as failed and refund credits
+router.put('/orders/:id/fail', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const failureReason = (reason || '').trim();
+    if (!failureReason || failureReason.length < 3) {
+      return res.status(400).json({ message: 'Failure reason must be at least 3 characters' });
+    }
+
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    if (order.status === 'completed') {
+      return res.status(400).json({ message: 'Order already completed' });
+    }
+    if (order.status === 'failed') {
+      return res.status(400).json({ message: 'Order already failed' });
+    }
+
+    const user = await User.findById(order.user);
+    if (!user) {
+      return res.status(404).json({ message: 'User for this order not found' });
+    }
+
+    // Refund credits
+    const refundAmount = Number(order.checksUsed) || 0;
+    user.checks = (Number(user.checks) || 0) + refundAmount;
+
+    order.status = 'failed';
+    order.failureReason = failureReason;
+    order.refundAmount = refundAmount;
+    order.refundedAt = new Date();
+
+    await Promise.all([user.save(), order.save()]);
+
+    res.json({
+      message: 'Order marked as failed and credits refunded',
+      order,
+      userChecks: user.checks
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Upload file for order
 router.post('/orders/:id/upload', authMiddleware, adminMiddleware, async (req, res) => {
   try {
@@ -58,26 +106,49 @@ router.post('/orders/:id/upload', authMiddleware, adminMiddleware, async (req, r
       return res.status(404).json({ message: 'Order not found' });
     }
     
-    if (!req.files || !req.files.file) {
-      return res.status(400).json({ message: 'No file provided' });
+    if (!req.files || (!req.files.aiReport && !req.files.similarityReport)) {
+      return res.status(400).json({ message: 'At least one file (AI Report or Similarity Report) is required' });
     }
-    
-    const file = req.files.file;
-    const result = await uploadBuffer(file.data, `admin_${file.name}`, 'ecommerce-orders');
 
-    order.adminFile = {
-      filename: file.name,
-      url: result.secure_url,
-      secure_url: result.secure_url,
-      public_id: result.public_id,
-      uploadedAt: new Date()
-    };
+    // Initialize adminFiles if not present
+    if (!order.adminFiles) {
+      order.adminFiles = {
+        aiReport: null,
+        similarityReport: null
+      };
+    }
+
+    // Upload AI Report if provided
+    if (req.files.aiReport) {
+      const aiReportFile = req.files.aiReport;
+      const aiResult = await uploadBuffer(aiReportFile.data, aiReportFile.name, 'ecommerce-orders');
+      order.adminFiles.aiReport = {
+        filename: aiResult.public_id.split('/').pop(), // Use the renamed filename from Cloudinary
+        url: aiResult.secure_url,
+        secure_url: aiResult.secure_url,
+        public_id: aiResult.public_id,
+        uploadedAt: new Date()
+      };
+    }
+
+    // Upload Similarity Report if provided
+    if (req.files.similarityReport) {
+      const similarityFile = req.files.similarityReport;
+      const similarityResult = await uploadBuffer(similarityFile.data, similarityFile.name, 'ecommerce-orders');
+      order.adminFiles.similarityReport = {
+        filename: similarityResult.public_id.split('/').pop(), // Use the renamed filename from Cloudinary
+        url: similarityResult.secure_url,
+        secure_url: similarityResult.secure_url,
+        public_id: similarityResult.public_id,
+        uploadedAt: new Date()
+      };
+    }
     
     await order.save();
     
     res.json({
-      message: 'File uploaded successfully',
-      adminFile: order.adminFile
+      message: 'Files uploaded successfully',
+      adminFiles: order.adminFiles
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -176,6 +247,30 @@ router.get('/users/:id', authMiddleware, adminMiddleware, async (req, res) => {
       totalOrdersCount: orders.length,
       completedOrdersCount: orders.filter(o => o.status === 'completed').length
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Change user password (Admin only)
+router.put('/users/:id/password', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+    
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // Assign raw password and rely on User model pre-save hook to hash
+    user.password = newPassword;
+    await user.save();
+    
+    res.json({ message: 'Password updated successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
