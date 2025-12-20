@@ -36,8 +36,13 @@ router.get('/users/:id', authMiddleware, adminMiddleware, async (req, res) => {
       createdAt: { $gte: today }
     }).populate('book', 'title price').sort({ createdAt: -1 });
 
-    // Get total checks used today
-    const creditsUsedToday = todayOrders.reduce((sum, order) => sum + (order.checksUsed || 0), 0);
+    // Calculate daily credits used today from ONLY non-failed, non-refunded orders
+    const dailyCreditsUsedToday = todayOrders
+      .filter(order => order.status !== 'failed') // Exclude failed orders
+      .reduce(
+        (sum, order) => sum + (order.dailyCreditsUsed || 0),
+        0
+      );
 
     res.json({
       user: {
@@ -53,13 +58,16 @@ router.get('/users/:id', authMiddleware, adminMiddleware, async (req, res) => {
         subscriptionDaysRemaining: user.unlimitedSettings.subscriptionDaysRemaining,
         subscriptionStartDate: user.unlimitedSettings.subscriptionStartDate,
         creditsResetAt: user.unlimitedSettings.creditsResetAt,
-        dailyCreditsUsedToday: creditsUsedToday,
-        dailyCreditsAvailable: user.unlimitedSettings.dailyCredits - creditsUsedToday
+        dailyCreditsUsedToday,
+        dailyCreditsAvailable: user.unlimitedSettings.dailyCredits - dailyCreditsUsedToday
       },
       todayOrders: todayOrders.map(order => ({
         _id: order._id,
         book: order.book?.title,
         checksUsed: order.checksUsed,
+        dailyCreditsUsed: order.dailyCreditsUsed,
+        regularChecksUsed: order.regularChecksUsed,
+        paymentSource: order.paymentSource,
         status: order.status,
         createdAt: order.createdAt
       }))

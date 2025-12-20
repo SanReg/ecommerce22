@@ -204,6 +204,11 @@ async function markFailed(orderId) {
       alert('Order marked as failed and credits refunded');
       showMessage(data.message || 'Order marked as failed and credits refunded', 'success');
       loadAllOrders();
+      // Refresh unlimited users if viewing one
+      const tab = document.querySelector('[data-tab="unlimited"].active');
+      if (tab) {
+        loadUnlimitedUsers();
+      }
     } else {
       alert(data.message || 'Could not mark as failed');
       showMessage(data.message || 'Could not mark as failed', 'error');
@@ -1082,7 +1087,9 @@ function showUnlimitedUserDetailsModal(data) {
           <thead>
             <tr style="background: #0f172a; border-bottom: 1px solid #444;">
               <th style="padding: 0.75rem; text-align: left;">Service</th>
-              <th style="padding: 0.75rem; text-align: left;">Credits Used</th>
+              <th style="padding: 0.75rem; text-align: left;">Daily Credits</th>
+              <th style="padding: 0.75rem; text-align: left;">Regular Checks</th>
+              <th style="padding: 0.75rem; text-align: left;">Type</th>
               <th style="padding: 0.75rem; text-align: left;">Status</th>
               <th style="padding: 0.75rem; text-align: left;">Time</th>
             </tr>
@@ -1091,9 +1098,15 @@ function showUnlimitedUserDetailsModal(data) {
             ${todayOrders.map(order => `
               <tr style="border-bottom: 1px solid #333;">
                 <td style="padding: 0.75rem;">${order.book}</td>
-                <td style="padding: 0.75rem; color: #ef4444; font-weight: bold;">-${order.checksUsed}</td>
+                <td style="padding: 0.75rem; color: ${order.dailyCreditsUsed > 0 ? '#10b981' : '#999'}; font-weight: bold;">${order.dailyCreditsUsed || 0}</td>
+                <td style="padding: 0.75rem; color: ${order.regularChecksUsed > 0 ? '#06b6d4' : '#999'}; font-weight: bold;">${order.regularChecksUsed || 0}</td>
                 <td style="padding: 0.75rem;">
-                  <span style="background: ${order.status === 'completed' ? '#10b981' : '#f97316'}; padding: 0.25rem 0.75rem; border-radius: 3px; font-size: 0.85rem;">
+                  <span style="background: ${order.paymentSource === 'daily' ? '#10b981' : order.paymentSource === 'regular' ? '#06b6d4' : '#f97316'}; padding: 0.25rem 0.75rem; border-radius: 3px; font-size: 0.75rem; color: white;">
+                    ${order.paymentSource || 'mixed'}
+                  </span>
+                </td>
+                <td style="padding: 0.75rem;">
+                  <span style="background: ${order.status === 'completed' ? '#10b981' : order.status === 'failed' ? '#ef4444' : '#f97316'}; padding: 0.25rem 0.75rem; border-radius: 3px; font-size: 0.85rem;">
                     ${order.status}
                   </span>
                 </td>

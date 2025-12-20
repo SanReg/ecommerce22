@@ -15,6 +15,20 @@ const orderSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  // Track how the payment was split for refunds and reporting
+  dailyCreditsUsed: {
+    type: Number,
+    default: 0
+  },
+  regularChecksUsed: {
+    type: Number,
+    default: 0
+  },
+  paymentSource: {
+    type: String,
+    enum: ['daily', 'regular', 'mixed'],
+    default: 'regular'
+  },
   userFile: {
     filename: String,
     url: String,

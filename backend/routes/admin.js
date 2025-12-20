@@ -76,21 +76,48 @@ router.put('/orders/:id/fail', authMiddleware, adminMiddleware, async (req, res)
       return res.status(404).json({ message: 'User for this order not found' });
     }
 
-    // Refund credits
-    const refundAmount = Number(order.checksUsed) || 0;
-    user.checks = (Number(user.checks) || 0) + refundAmount;
+    // Refund credits respecting original payment source
+    const dailyUsed = Number(order.dailyCreditsUsed) || 0;
+    const regularUsed = Number(order.regularChecksUsed) || 0;
+    const totalRefund = dailyUsed + regularUsed;
+
+    if (dailyUsed > 0 && user.isUnlimited && user.unlimitedSettings) {
+      const currentUsed = Number(user.unlimitedSettings.dailyCreditsUsedToday || 0);
+      user.unlimitedSettings.dailyCreditsUsedToday = Math.max(0, currentUsed - dailyUsed);
+    }
+    if (regularUsed > 0) {
+      user.checks = (Number(user.checks) || 0) + regularUsed;
+    }
 
     order.status = 'failed';
     order.failureReason = failureReason;
-    order.refundAmount = refundAmount;
+    order.refundAmount = totalRefund;
     order.refundedAt = new Date();
 
     await Promise.all([user.save(), order.save()]);
 
+    // Fetch fresh user data and recalculate daily credits from all non-failed orders
+    const updatedUser = await User.findById(order.user).select('checks unlimitedSettings isUnlimited');
+    
+    if (updatedUser.isUnlimited) {
+      // Recalculate daily credits from orders to ensure accuracy
+      const today = new Date();
+      today.setUTCHours(0, 0, 0, 0);
+      const allOrdersToday = await Order.find({
+        user: order.user,
+        createdAt: { $gte: today },
+        status: { $ne: 'failed' }
+      });
+      const recalculatedDaily = allOrdersToday.reduce((sum, o) => sum + (o.dailyCreditsUsed || 0), 0);
+      updatedUser.unlimitedSettings.dailyCreditsUsedToday = recalculatedDaily;
+      await updatedUser.save();
+    }
+
     res.json({
       message: 'Order marked as failed and credits refunded',
       order,
-      userChecks: user.checks
+      userChecks: updatedUser.checks,
+      dailyCreditsUsedToday: updatedUser.unlimitedSettings?.dailyCreditsUsedToday
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

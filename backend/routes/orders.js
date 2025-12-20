@@ -8,6 +8,12 @@ const router = express.Router();
 
 // Create order (with file upload)
 router.post('/create', authMiddleware, async (req, res) => {
+  // Track deductions for possible refunds on regular checks only
+  let dailyCreditsUsed = 0;
+  let regularChecksUsed = 0;
+  let regularChecksDeducted = false;
+  let dailyCreditsDeducted = false;
+
   try {
     const { bookId } = req.body;
     
@@ -21,8 +27,32 @@ router.post('/create', authMiddleware, async (req, res) => {
     }
     
     const user = await User.findById(req.userId);
-    if (user.checks < book.price) {
-      return res.status(400).json({ message: 'Insufficient checks' });
+
+    // Calculate available balances, preferring daily credits for unlimited users
+    dailyCreditsUsed = 0;
+    regularChecksUsed = 0;
+    const price = book.price;
+
+    if (user.isUnlimited) {
+      const dailyAvailable = Math.max(
+        0,
+        user.unlimitedSettings.dailyCredits - user.unlimitedSettings.dailyCreditsUsedToday
+      );
+      dailyCreditsUsed = Math.min(price, dailyAvailable);
+      const remaining = price - dailyCreditsUsed;
+
+      // If daily credits are not enough, fall back to regular checks
+      if (remaining > user.checks) {
+        return res.status(400).json({ message: 'Insufficient checks' });
+      }
+
+      regularChecksUsed = remaining;
+    } else {
+      // Regular users must have enough checks
+      if (user.checks < price) {
+        return res.status(400).json({ message: 'Insufficient checks' });
+      }
+      regularChecksUsed = price;
     }
     
     // Handle file upload (required)
@@ -40,24 +70,37 @@ router.post('/create', authMiddleware, async (req, res) => {
       uploadedAt: new Date()
     };
     
+    const paymentSource = user.isUnlimited
+      ? (dailyCreditsUsed > 0 && regularChecksUsed > 0
+          ? 'mixed'
+          : dailyCreditsUsed > 0
+            ? 'daily'
+            : 'regular')
+      : 'regular';
+
     const order = new Order({
       user: req.userId,
       book: bookId,
       checksUsed: book.price,
+      dailyCreditsUsed,
+      regularChecksUsed,
+      paymentSource,
       userFile: userFile
     });
-    
+
     await order.save();
-    
-    // Deduct checks
-    user.checks -= book.price;
-    
-    // If unlimited user, track daily usage
-    if (user.isUnlimited) {
-      user.unlimitedSettings.dailyCreditsUsedToday += book.price;
+
+    // Deduct balances (daily credits are consumed first, then regular checks)
+    if (dailyCreditsUsed > 0) {
+      user.unlimitedSettings.dailyCreditsUsedToday += dailyCreditsUsed;
+      dailyCreditsDeducted = true;
     }
-    
+    if (regularChecksUsed > 0) {
+      user.checks -= regularChecksUsed;
+    }
+
     await user.save();
+    regularChecksDeducted = regularChecksUsed > 0;
     
     res.status(201).json({
       message: 'Order created successfully',
@@ -70,6 +113,22 @@ router.post('/create', authMiddleware, async (req, res) => {
       }
     });
   } catch (error) {
+    // If order creation fails after deductions, refund daily credits back to daily pool and regular checks back to balance
+    try {
+      const user = await User.findById(req.userId);
+      if (user) {
+        if (dailyCreditsDeducted && typeof dailyCreditsUsed === 'number' && dailyCreditsUsed > 0) {
+          const currentUsed = Number(user.unlimitedSettings?.dailyCreditsUsedToday || 0);
+          user.unlimitedSettings.dailyCreditsUsedToday = Math.max(0, currentUsed - dailyCreditsUsed);
+        }
+        if (regularChecksDeducted && typeof regularChecksUsed === 'number' && regularChecksUsed > 0) {
+          user.checks += regularChecksUsed;
+        }
+        await user.save();
+      }
+    } catch (_) {
+      // Suppress refund errors to avoid masking original failure
+    }
     res.status(500).json({ message: error.message });
   }
 });
