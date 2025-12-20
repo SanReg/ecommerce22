@@ -49,6 +49,8 @@ function switchTab(tabName) {
 
   if (tabName === 'codes') {
     loadCodes();
+  } else if (tabName === 'status') {
+    loadServiceStatus();
   }
 }
 
@@ -150,7 +152,7 @@ function displayAllOrders(orders) {
         <div style="padding: 0.9rem 1rem; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px; color: #7f1d1d; margin-bottom: 1rem;">
           <p style="margin: 0 0 0.4rem 0; font-size: 0.9rem; font-weight: 700;">❌ Order Failed</p>
           <p style="margin: 0; font-size: 0.9rem;">Reason: <strong>${order.failureReason || 'Not specified'}</strong></p>
-          <p style="margin: 0.4rem 0 0 0; font-size: 0.9rem; color: #1f2937;">� Credits Refunded: <strong>${order.refundAmount || order.checksUsed}</strong></p>
+          <p style="margin: 0.4rem 0 0 0; font-size: 0.9rem; color: #1f2937;">💎 Credits Refunded: <strong>${order.refundAmount || order.checksUsed}</strong></p>
           ${order.refundedAt ? `<p style="margin: 0.2rem 0 0 0; font-size: 0.85rem; color: #6b7280;">Refunded: ${new Date(order.refundedAt).toLocaleString()}</p>` : ''}
         </div>
         ` : ''}
@@ -731,3 +733,96 @@ function logout() {
   localStorage.clear();
   window.location.href = '/login.html';
 }
+
+// Service Status Functions
+async function loadServiceStatus() {
+  try {
+    const response = await fetch('/api/service/status', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    const data = await response.json();
+    
+    if (response.ok) {
+      updateStatusToggle(data.isOnline);
+    }
+  } catch (error) {
+    console.error('Error loading service status:', error);
+  }
+}
+
+function updateStatusToggle(isOnline) {
+  const toggle = document.getElementById('statusToggle');
+  const statusText = document.getElementById('currentStatusText');
+  const preview = document.getElementById('statusPreview');
+  
+  if (toggle) {
+    toggle.checked = isOnline;
+  }
+  
+  if (statusText) {
+    if (isOnline) {
+      statusText.innerHTML = '<img src="https://cdn.discordapp.com/emojis/1437360640409866240.gif" alt="Online" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 8px;">Services Online';
+      statusText.style.color = '#10b981';
+    } else {
+      statusText.innerHTML = '<img src="https://cdn.discordapp.com/emojis/1043080375649447936.gif" alt="Offline" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 8px;">Services Offline';
+      statusText.style.color = '#ef4444';
+    }
+  }
+  
+  if (preview) {
+    if (isOnline) {
+      preview.innerHTML = '<img src="https://cdn.discordapp.com/emojis/1437360640409866240.gif" alt="Online" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px;">All services are online.';
+      preview.style.background = 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.15) 100%)';
+      preview.style.color = '#10b981';
+      preview.style.border = '2px solid rgba(16, 185, 129, 0.3)';
+    } else {
+      preview.innerHTML = '<img src="https://cdn.discordapp.com/emojis/1043080375649447936.gif" alt="Offline" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px;">We are currently offline. Please wait until we are back in a few hours.';
+      preview.style.background = 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.15) 100%)';
+      preview.style.color = '#ef4444';
+      preview.style.border = '2px solid rgba(239, 68, 68, 0.3)';
+    }
+  }
+}
+
+async function toggleServiceStatus(isOnline) {
+  try {
+    const response = await fetch('/api/service/status', {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ isOnline })
+    });
+
+    const data = await response.json();
+    
+    if (response.ok) {
+      showMessage(data.message, 'success');
+      updateStatusToggle(isOnline);
+    } else {
+      showMessage(data.message || 'Could not update status', 'error');
+      // Revert toggle on error
+      const toggle = document.getElementById('statusToggle');
+      if (toggle) toggle.checked = !isOnline;
+    }
+  } catch (error) {
+    showMessage('Error updating status: ' + error.message, 'error');
+    // Revert toggle on error
+    const toggle = document.getElementById('statusToggle');
+    if (toggle) toggle.checked = !isOnline;
+  }
+}
+
+// Setup status toggle listener
+document.addEventListener('DOMContentLoaded', () => {
+  const toggle = document.getElementById('statusToggle');
+  if (toggle) {
+    toggle.addEventListener('change', (e) => {
+      toggleServiceStatus(e.target.checked);
+    });
+  }
+});

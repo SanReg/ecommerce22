@@ -1,7 +1,7 @@
 let token = localStorage.getItem('token');
 let currentUser = localStorage.getItem('currentUser') ? JSON.parse(localStorage.getItem('currentUser')) : null;
 let books = [];
-const DISCORD_INVITE_URL = 'https://discord.gg/7WbyvTWKk'; // TODO: Replace with your actual invite link
+const DISCORD_INVITE_URL = 'https://discord.gg/7TrBn3wBf5'; // TODO: Replace with your actual invite link
 
 // Check if user is logged in
 if (!token) {
@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
   displayUserInfo();
   loadBooks();
   setupTabButtons();
+  checkServiceStatus();
 });
 
 function setupTabButtons() {
@@ -95,11 +96,11 @@ function displayServices() {
   cardTurnitin.innerHTML = `
     <div style="margin-bottom: 1.5rem;">
       <div style="font-size: 2.5rem; margin-bottom: 1rem;">🔍</div>
-      <h3 style="font-size: 1.3rem; margin-bottom: 0.75rem; color: var(--text-primary);">TurnItIn Check</h3>
-      <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">Get a plagiarism similarity and AI report. We provide similarity and AI detection reports generated through Turnitin, helping you review your work before final submission. File upload required. <br><em>Files are not stored in Turnitin!<em></p>
+      <h3 style="font-size: 1.3rem; margin-bottom: 0.75rem; color: var(--text-primary);">Turnitin Check</h3>
+      <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">We provide similarity and AI detection reports generated through Turnitin, helping you review your work before final submission.<br><em>Files are not stored in Turnitin!<em></p>
     </div>
     <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid var(--card-border);">
-      <span style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem;">💎 1 Credit</span>
+      <span style="background: linear-gradient(135deg, #a89968 0%, #8b7d5e 100%); color: white; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem;">💎 1 Credit</span>
       ${turnitinAvailable
         ? `<button onclick="openBuyModal('${turnitin._id}', 'TurnItIn Check', 1)" style="background: linear-gradient(135deg, var(--primary) 0%, #7c3aca 100%); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">Submit Now →</button>`
         : `<button disabled style="opacity: 0.5; cursor: not-allowed; background: #666; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: 600;">Unavailable</button>`}
@@ -130,7 +131,7 @@ function displayServices() {
       <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">Assignments are written 100% by human experts from scratch, with 0% AI detection on Turnitin. Includes complete research, proper structure, and full citations (APA / MLA / Harvard).</p>
     </div>
     <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid var(--card-border);">
-      <span style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem;">✨ Inquire</span>
+      <span style="background: linear-gradient(135deg, #a89968 0%, #8b7d5e 100%); color: white; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem;">✨ Inquire</span>
       <a href="${DISCORD_INVITE_URL}" target="_blank" rel="noopener" style="background: linear-gradient(135deg, #ec4899 0%, #f97316 100%); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: 600; text-decoration: none; transition: all 0.3s ease; display: inline-block;">Open Discord →</a>
     </div>
   `;
@@ -160,11 +161,40 @@ function displayServices() {
 A Turnitin report is provided along with the final rewritten file.</p>
     </div>
     <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid var(--card-border);">
-      <span style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem;">✨ Inquire</span>
+      <span style="background: linear-gradient(135deg, #a89968 0%, #8b7d5e 100%); color: white; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem;">✨ Inquire</span>
       <a href="${DISCORD_INVITE_URL}" target="_blank" rel="noopener" style="background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: 600; text-decoration: none; transition: all 0.3s ease; display: inline-block;">Open Discord →</a>
     </div>
   `;
   container.appendChild(cardRewrite);
+
+  // Academic Tools & Entertainment (Discord)
+  const cardTools = document.createElement('div');
+  cardTools.style.cssText = `
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, rgba(6, 182, 212, 0.12) 50%, rgba(99, 102, 241, 0.12) 100%);
+    border: 2px solid var(--card-border);
+    border-radius: 12px;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  `;
+  cardTools.onmouseover = (e) => e.currentTarget.style.transform = 'translateY(-4px)';
+  cardTools.onmouseout = (e) => e.currentTarget.style.transform = 'translateY(0)';
+  
+  cardTools.innerHTML = `
+    <div style="margin-bottom: 1.5rem;">
+      <div style="font-size: 2.5rem; margin-bottom: 1rem;">🎛️</div>
+      <h3 style="font-size: 1.3rem; margin-bottom: 0.75rem; color: var(--text-primary);">Academic tools & entertainment</h3>
+      <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">Access ChatGPT, QuillBot, Gemini, CapCut, Perplexity, Netflix etc. at discounted rates.<br>Fast activation, full control, 100% confidentiality.</p>
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid var(--card-border);">
+      <span style="background: linear-gradient(135deg, #a89968 0%, #8b7d5e 100%); color: white; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem;">✨ Inquire</span>
+      <a href="${DISCORD_INVITE_URL}" target="_blank" rel="noopener" style="background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: 600; text-decoration: none; transition: all 0.3s ease; display: inline-block;">Open Discord →</a>
+    </div>
+  `;
+  container.appendChild(cardTools);
 }
 
 function openBuyModal(bookId, bookTitle, price) {
@@ -346,7 +376,7 @@ function displayUserOrders(orders) {
           <div style="padding: 1rem; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px; color: #7f1d1d;">
             <p style="margin: 0 0 0.4rem 0; font-size: 0.9rem; font-weight: 600;">❌ Order Failed</p>
             <p style="margin: 0; font-size: 0.9rem;">Reason: ${order.failureReason || 'Not specified'}</p>
-            <p style="margin: 0.4rem 0 0 0; font-size: 0.9rem; color: #1f2937;">� Credits Refunded: <strong>${order.refundAmount || order.checksUsed}</strong></p>
+            <p style="margin: 0.4rem 0 0 0; font-size: 0.9rem; color: #1f2937;">💎 Credits Refunded: <strong>${order.refundAmount || order.checksUsed}</strong></p>
           </div>
         ` : `
           <div style="padding: 1rem; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; color: #92400e;">
@@ -416,3 +446,44 @@ document.addEventListener('click', (e) => {
     closeBuyModal();
   }
 });
+
+// Service Status Check
+async function checkServiceStatus() {
+  try {
+    const response = await fetch('/api/service/status', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    const data = await response.json();
+    
+    if (response.ok) {
+      displayServiceStatusNotice(data.isOnline);
+    }
+  } catch (error) {
+    console.error('Error checking service status:', error);
+  }
+}
+
+function displayServiceStatusNotice(isOnline) {
+  const notice = document.getElementById('serviceStatusNotice');
+  
+  if (!notice) return;
+  
+  notice.style.display = 'block';
+  
+  if (isOnline) {
+    notice.innerHTML = '<img src="https://cdn.discordapp.com/emojis/1437360640409866240.gif" alt="Online" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 10px;">All services are online.';
+    notice.style.background = 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.2) 100%)';
+    notice.style.color = '#10b981';
+    notice.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+    notice.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.2)';
+  } else {
+    notice.innerHTML = '<img src="https://cdn.discordapp.com/emojis/1043080375649447936.gif" alt="Offline" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 10px;">We are currently offline. Please wait until we are back in a few hours.';
+    notice.style.background = 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.2) 100%)';
+    notice.style.color = '#ef4444';
+    notice.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+    notice.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.2)';
+  }
+}
