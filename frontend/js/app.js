@@ -130,7 +130,7 @@ function displayServices() {
       <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">Get personalized assistance for your assignment on Discord.</p>
     </div>
     <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid var(--card-border);">
-      <span style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem;">✨ Free</span>
+      <span style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem;">✨ Inquire</span>
       <a href="${DISCORD_INVITE_URL}" target="_blank" rel="noopener" style="background: linear-gradient(135deg, #ec4899 0%, #f97316 100%); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: 600; text-decoration: none; transition: all 0.3s ease; display: inline-block;">Open Discord →</a>
     </div>
   `;
@@ -159,7 +159,7 @@ function displayServices() {
       <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">Request a rewrite or polishing via Discord.</p>
     </div>
     <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid var(--card-border);">
-      <span style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem;">✨ Free</span>
+      <span style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem;">✨ Inquire</span>
       <a href="${DISCORD_INVITE_URL}" target="_blank" rel="noopener" style="background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: 600; text-decoration: none; transition: all 0.3s ease; display: inline-block;">Open Discord →</a>
     </div>
   `;
