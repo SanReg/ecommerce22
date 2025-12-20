@@ -30,6 +30,37 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  // Unlimited subscription fields
+  isUnlimited: {
+    type: Boolean,
+    default: false
+  },
+  unlimitedSettings: {
+    dailyCredits: {
+      type: Number,
+      default: 0
+    },
+    subscriptionDaysRemaining: {
+      type: Number,
+      default: 0
+    },
+    subscriptionStartDate: {
+      type: Date,
+      default: null
+    },
+    creditsResetAt: {
+      type: Date,
+      default: null
+    },
+    dailyCreditsUsedToday: {
+      type: Number,
+      default: 0
+    }
+  },
+  adminPrivateNotes: {
+    type: String,
+    default: ''
+  },
   createdAt: {
     type: Date,
     default: Date.now

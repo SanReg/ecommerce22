@@ -8,7 +8,49 @@ const router = express.Router();
 router.get('/balance', authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.userId);
-    res.json({ checks: user.checks });
+    
+    // Check if unlimited and process daily reset if needed
+    if (user.isUnlimited) {
+      const now = new Date();
+      const resetTime = new Date(user.unlimitedSettings.creditsResetAt);
+      
+      // If reset time has passed, reset daily credits
+      if (now > resetTime) {
+        user.unlimitedSettings.dailyCreditsUsedToday = 0;
+        const nextReset = new Date(now);
+        nextReset.setUTCHours(24, 0, 0, 0);
+        user.unlimitedSettings.creditsResetAt = nextReset;
+        
+        // Decrement subscription days
+        user.unlimitedSettings.subscriptionDaysRemaining--;
+        
+        // If subscription expired, revert to normal
+        if (user.unlimitedSettings.subscriptionDaysRemaining <= 0) {
+          user.isUnlimited = false;
+          user.unlimitedSettings = {
+            dailyCredits: 0,
+            subscriptionDaysRemaining: 0,
+            subscriptionStartDate: null,
+            creditsResetAt: null,
+            dailyCreditsUsedToday: 0
+          };
+        }
+        
+        await user.save();
+      }
+    }
+    
+    res.json({ 
+      checks: user.checks,
+      isUnlimited: user.isUnlimited,
+      unlimitedInfo: user.isUnlimited ? {
+        dailyCredits: user.unlimitedSettings.dailyCredits,
+        dailyCreditsUsedToday: user.unlimitedSettings.dailyCreditsUsedToday,
+        dailyCreditsAvailable: user.unlimitedSettings.dailyCredits - user.unlimitedSettings.dailyCreditsUsedToday,
+        creditsResetAt: user.unlimitedSettings.creditsResetAt,
+        subscriptionDaysRemaining: user.unlimitedSettings.subscriptionDaysRemaining
+      } : null
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

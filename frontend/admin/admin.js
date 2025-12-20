@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupTabButtons();
   loadAllOrders();
   loadAllUsers();
+  loadUnlimitedUsers();
   loadCodes();
 
   const form = document.getElementById('generateCodeForm');
@@ -51,6 +52,8 @@ function switchTab(tabName) {
     loadCodes();
   } else if (tabName === 'status') {
     loadServiceStatus();
+  } else if (tabName === 'unlimited') {
+    loadUnlimitedUsers();
   }
 }
 
@@ -826,3 +829,371 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+// Unlimited Users Management
+async function loadUnlimitedUsers() {
+  try {
+    const response = await fetch('/api/unlimited/users', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const users = await response.json();
+    
+    if (!Array.isArray(users)) {
+      throw new Error('Invalid response format from server');
+    }
+    
+    displayUnlimitedUsers(users);
+  } catch (error) {
+    showMessage('Error loading unlimited users: ' + error.message, 'error');
+    const container = document.getElementById('unlimitedUsersContainer');
+    if (container) {
+      container.innerHTML = `<p style="text-align: center; color: #ef4444; padding: 2rem;">Error: ${error.message}</p>`;
+    }
+  }
+}
+
+function displayUnlimitedUsers(users) {
+  const container = document.getElementById('unlimitedUsersContainer');
+  container.innerHTML = '';
+
+  if (!Array.isArray(users)) {
+    container.innerHTML = '<p style="text-align: center; color: #ef4444; padding: 2rem;">Error: Invalid data format received from server</p>';
+    return;
+  }
+
+  // Always show the convert form first
+  const convertBtn = document.createElement('div');
+  convertBtn.style.cssText = 'margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid #444;';
+  convertBtn.innerHTML = `
+    <h3 style="margin-bottom: 1rem;">Convert User to Unlimited</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 1rem; margin-bottom: 1.5rem;">
+      <select id="selectUser" style="padding: 0.75rem; border-radius: 4px; background: #1a1a2e; color: white; border: 1px solid #444;">
+        <option value="">Select a user...</option>
+      </select>
+      <input type="number" id="dailyCredits" placeholder="Daily Credits" min="1" style="padding: 0.75rem; border-radius: 4px; background: #1a1a2e; color: white; border: 1px solid #444;">
+      <input type="number" id="subDays" placeholder="Subscription Days" min="1" style="padding: 0.75rem; border-radius: 4px; background: #1a1a2e; color: white; border: 1px solid #444;">
+      <button onclick="makeUserUnlimited()" style="background: #10b981; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; font-weight: 600;">Make Unlimited</button>
+    </div>
+  `;
+  container.appendChild(convertBtn);
+  
+  // Populate user dropdown with all non-unlimited users
+  loadAllUsersForUnlimited();
+
+  // Show unlimited users list if any exist
+  if (!users || users.length === 0) {
+    container.innerHTML += '<p style="text-align: center; color: #999; padding: 2rem;">No unlimited users yet.</p>';
+    return;
+  }
+
+  const table = document.createElement('table');
+  table.style.cssText = 'width: 100%; border-collapse: collapse; margin-top: 2rem;';
+  
+  table.innerHTML = `
+    <thead>
+      <tr style="background: #333; color: white;">
+        <th style="padding: 1rem; text-align: left;">Username</th>
+        <th style="padding: 1rem; text-align: left;">Email</th>
+        <th style="padding: 1rem; text-align: left;">Daily Credits</th>
+        <th style="padding: 1rem; text-align: left;">Days Remaining</th>
+        <th style="padding: 1rem; text-align: left;">Next Reset</th>
+        <th style="padding: 1rem; text-align: left;">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${users.map(user => {
+        const resetDate = new Date(user.unlimitedSettings.creditsResetAt).toLocaleString();
+        return `
+          <tr style="border-bottom: 1px solid #444;">
+            <td style="padding: 1rem;">${user.username}</td>
+            <td style="padding: 1rem;">${user.email}</td>
+            <td style="padding: 1rem; color: #10b981; font-weight: bold;">${user.unlimitedSettings.dailyCredits}</td>
+            <td style="padding: 1rem; color: ${user.unlimitedSettings.subscriptionDaysRemaining <= 5 ? '#ef4444' : '#06b6d4'}; font-weight: bold;">${user.unlimitedSettings.subscriptionDaysRemaining} days</td>
+            <td style="padding: 1rem; font-size: 0.9rem;">${resetDate}</td>
+            <td style="padding: 1rem;">
+              <button onclick="viewUnlimitedUserDetails('${user._id}')" style="background: #6366f1; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">View</button>
+            </td>
+          </tr>
+        `;
+      }).join('')}
+    </tbody>
+  `;
+
+  container.appendChild(table);
+}
+
+async function loadAllUsersForUnlimited() {
+  try {
+    const response = await fetch('/api/admin/users', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    const users = await response.json();
+    const userSelect = document.getElementById('selectUser');
+    
+    users.forEach(user => {
+      if (!user.isUnlimited) {
+        const option = document.createElement('option');
+        option.value = user._id;
+        option.textContent = `${user.username} (${user.email})`;
+        userSelect.appendChild(option);
+      }
+    });
+  } catch (error) {
+    console.error('Error loading users:', error);
+  }
+}
+
+async function makeUserUnlimited() {
+  const userId = document.getElementById('selectUser').value;
+  const dailyCredits = parseInt(document.getElementById('dailyCredits').value);
+  const subscriptionDays = parseInt(document.getElementById('subDays').value);
+
+  if (!userId || !dailyCredits || !subscriptionDays) {
+    showMessage('Please fill in all fields', 'error');
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/unlimited/users/${userId}/make-unlimited`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ dailyCredits, subscriptionDays })
+    });
+
+    const data = await response.json();
+    
+    if (response.ok) {
+      showMessage('User converted to unlimited successfully!', 'success');
+      document.getElementById('selectUser').value = '';
+      document.getElementById('dailyCredits').value = '';
+      document.getElementById('subDays').value = '';
+      loadUnlimitedUsers();
+    } else {
+      showMessage(data.message || 'Error converting user', 'error');
+    }
+  } catch (error) {
+    showMessage('Error: ' + error.message, 'error');
+  }
+}
+
+async function viewUnlimitedUserDetails(userId) {
+  try {
+    const response = await fetch(`/api/unlimited/users/${userId}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    const data = await response.json();
+    showUnlimitedUserDetailsModal(data);
+  } catch (error) {
+    showMessage('Error loading user details: ' + error.message, 'error');
+  }
+}
+
+function showUnlimitedUserDetailsModal(data) {
+  const { user, unlimited, todayOrders } = data;
+  
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 1rem;
+  `;
+
+  const content = document.createElement('div');
+  content.style.cssText = `
+    background: #1a1a2e;
+    color: white;
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 900px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+  `;
+
+  content.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <h2 style="margin: 0;">${user.username}</h2>
+      <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background: #ef4444; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Close</button>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+      <div>
+        <h3 style="margin-top: 0;">User Info</h3>
+        <p><strong>Email:</strong> ${user.email}</p>
+        <p><strong>Regular Checks:</strong> ${user.checks}</p>
+        <p><strong>Member Since:</strong> ${new Date(user.createdAt).toLocaleDateString()}</p>
+      </div>
+      <div>
+        <h3 style="margin-top: 0;">Unlimited Status</h3>
+        <p><strong>Daily Credits:</strong> <span style="color: #10b981; font-size: 1.2em; font-weight: bold;">${unlimited.dailyCredits}</span></p>
+        <p><strong>Days Remaining:</strong> <span style="color: #06b6d4; font-weight: bold;">${unlimited.subscriptionDaysRemaining} days</span></p>
+        <p><strong>Today's Usage:</strong> ${unlimited.dailyCreditsUsedToday} / ${unlimited.dailyCredits}</p>
+        <p><strong>Available Today:</strong> <span style="color: #10b981;">${unlimited.dailyCreditsAvailable}</span></p>
+        <p><strong>Next Reset:</strong> ${new Date(unlimited.creditsResetAt).toLocaleString()}</p>
+      </div>
+    </div>
+
+    <div style="margin-bottom: 2rem;">
+      <h3>Admin Notes</h3>
+      <textarea id="adminNotes" style="width: 100%; padding: 1rem; background: #0f172a; color: white; border: 1px solid #444; border-radius: 4px; font-family: monospace; resize: vertical; min-height: 120px;">${user.adminPrivateNotes}</textarea>
+      <button onclick="saveAdminNotes('${user._id}')" style="background: #6366f1; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; margin-top: 0.5rem;">Save Notes</button>
+    </div>
+
+    <div style="margin-bottom: 2rem;">
+      <h3>Update Subscription</h3>
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem;">Daily Credits</label>
+          <input type="number" id="newDailyCredits" value="${unlimited.dailyCredits}" min="1" style="width: 100%; padding: 0.75rem; border-radius: 4px; background: #0f172a; color: white; border: 1px solid #444;">
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem;">Days Remaining</label>
+          <input type="number" id="newSubDays" value="${unlimited.subscriptionDaysRemaining}" min="1" style="width: 100%; padding: 0.75rem; border-radius: 4px; background: #0f172a; color: white; border: 1px solid #444;">
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem;">&nbsp;</label>
+          <button onclick="updateUnlimitedSettings('${user._id}')" style="width: 100%; background: #10b981; color: white; border: none; padding: 0.75rem; border-radius: 4px; cursor: pointer; font-weight: 600;">Update</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-bottom: 2rem;">
+      <h3>Today's Orders (GMT)</h3>
+      ${todayOrders.length > 0 ? `
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="background: #0f172a; border-bottom: 1px solid #444;">
+              <th style="padding: 0.75rem; text-align: left;">Service</th>
+              <th style="padding: 0.75rem; text-align: left;">Credits Used</th>
+              <th style="padding: 0.75rem; text-align: left;">Status</th>
+              <th style="padding: 0.75rem; text-align: left;">Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${todayOrders.map(order => `
+              <tr style="border-bottom: 1px solid #333;">
+                <td style="padding: 0.75rem;">${order.book}</td>
+                <td style="padding: 0.75rem; color: #ef4444; font-weight: bold;">-${order.checksUsed}</td>
+                <td style="padding: 0.75rem;">
+                  <span style="background: ${order.status === 'completed' ? '#10b981' : '#f97316'}; padding: 0.25rem 0.75rem; border-radius: 3px; font-size: 0.85rem;">
+                    ${order.status}
+                  </span>
+                </td>
+                <td style="padding: 0.75rem; font-size: 0.9rem;">${new Date(order.createdAt).toLocaleString()}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      ` : '<p style="color: #999;">No orders today</p>'}
+    </div>
+
+    <div style="display: flex; gap: 1rem;">
+      <button onclick="revertUnlimited('${user._id}')" style="background: #ef4444; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; font-weight: 600;">Revert to Normal User</button>
+    </div>
+  `;
+
+  modal.appendChild(content);
+  document.body.appendChild(modal);
+  modal.onclick = (e) => {
+    if (e.target === modal) modal.remove();
+  };
+}
+
+async function saveAdminNotes(userId) {
+  const notes = document.getElementById('adminNotes').value;
+  
+  try {
+    const response = await fetch(`/api/unlimited/users/${userId}/notes`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ notes })
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      showMessage('Notes saved successfully', 'success');
+    } else {
+      showMessage(data.message || 'Error saving notes', 'error');
+    }
+  } catch (error) {
+    showMessage('Error: ' + error.message, 'error');
+  }
+}
+
+async function updateUnlimitedSettings(userId) {
+  const dailyCredits = parseInt(document.getElementById('newDailyCredits').value);
+  const subscriptionDays = parseInt(document.getElementById('newSubDays').value);
+
+  if (!dailyCredits || !subscriptionDays) {
+    showMessage('Please fill in all fields', 'error');
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/unlimited/users/${userId}/unlimited`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ dailyCredits, subscriptionDays })
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      showMessage('Settings updated successfully', 'success');
+      setTimeout(() => viewUnlimitedUserDetails(userId), 1000);
+    } else {
+      showMessage(data.message || 'Error updating settings', 'error');
+    }
+  } catch (error) {
+    showMessage('Error: ' + error.message, 'error');
+  }
+}
+
+async function revertUnlimited(userId) {
+  if (!confirm('Are you sure you want to revert this user to normal status?')) return;
+
+  try {
+    const response = await fetch(`/api/unlimited/users/${userId}/revert-unlimited`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      showMessage('User reverted to normal status', 'success');
+      document.querySelector('[style*="position: fixed"]')?.remove();
+      loadUnlimitedUsers();
+    } else {
+      showMessage(data.message || 'Error reverting user', 'error');
+    }
+  } catch (error) {
+    showMessage('Error: ' + error.message, 'error');
+  }
+}
+

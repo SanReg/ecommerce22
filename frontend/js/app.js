@@ -54,6 +54,17 @@ async function updateChecksDisplay() {
     const data = await response.json();
     document.getElementById('checksAmount').textContent = data.checks;
     currentUser.checks = data.checks;
+    
+    // Display unlimited status if applicable
+    const unlimitedNotice = document.getElementById('unlimitedStatusNotice');
+    if (data.isUnlimited && data.unlimitedInfo) {
+      const info = data.unlimitedInfo;
+      const resetDate = new Date(info.creditsResetAt).toLocaleString();
+      unlimitedNotice.innerHTML = `⭐ <strong>Unlimited User</strong> | Daily Credits: <span style="color: #ffffff; font-weight: bold;">${info.dailyCreditsAvailable}/${info.dailyCredits}</span> | ${info.subscriptionDaysRemaining} days remaining | Resets at ${resetDate}`;
+      unlimitedNotice.style.display = 'block';
+    } else {
+      unlimitedNotice.style.display = 'none';
+    }
   } catch (error) {
     console.error('Error fetching checks:', error);
   }

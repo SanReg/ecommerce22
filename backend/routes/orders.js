@@ -49,7 +49,14 @@ router.post('/create', authMiddleware, async (req, res) => {
     
     await order.save();
     
+    // Deduct checks
     user.checks -= book.price;
+    
+    // If unlimited user, track daily usage
+    if (user.isUnlimited) {
+      user.unlimitedSettings.dailyCreditsUsedToday += book.price;
+    }
+    
     await user.save();
     
     res.status(201).json({

@@ -31,6 +31,7 @@ app.use('/api/products', require('./routes/products'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/service', require('./routes/serviceStatus'));
+app.use('/api/unlimited', require('./routes/unlimited'));
 
 // Serve HTML files
 app.get('/', (req, res) => {
