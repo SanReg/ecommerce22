@@ -2,11 +2,166 @@ let token = localStorage.getItem('token');
 let currentUser = localStorage.getItem('currentUser') ? JSON.parse(localStorage.getItem('currentUser')) : null;
 let allOrders = [];
 let allUsers = [];
+let lastPendingOrderCount = 0;
+let orderCheckInterval = null;
 
 function refreshUsersView() {
   if (Array.isArray(allUsers) && allUsers.length > 0) {
     displayAllUsers(allUsers);
   }
+}
+
+// Play notification sound for new orders
+function playNotificationSound() {
+  try {
+    // Resume audio context if suspended (required by some browsers)
+    const audioContextClass = window.AudioContext || window.webkitAudioContext;
+    const audioContext = new audioContextClass();
+    
+    if (audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+    
+    // Create a more noticeable notification pattern with multiple beeps
+    const now = audioContext.currentTime;
+    const beepDuration = 0.3;
+    const beepGap = 0.15;
+    const totalDuration = 5; // 5 seconds total
+    let currentTime = now;
+    
+    // Create pattern of beeps for 5 seconds
+    while (currentTime - now < totalDuration) {
+      const osc = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      
+      osc.connect(gain);
+      gain.connect(audioContext.destination);
+      
+      osc.frequency.value = 900; // Hz - higher frequency
+      osc.type = 'sine';
+      
+      // Very loud - 0.7 gain
+      gain.gain.setValueAtTime(0.7, currentTime);
+      gain.gain.setValueAtTime(0, currentTime + beepDuration);
+      
+      osc.start(currentTime);
+      osc.stop(currentTime + beepDuration);
+      
+      currentTime += beepDuration + beepGap;
+    }
+  } catch (error) {
+    console.error('Error playing notification sound:', error);
+  }
+}
+
+// Show toast notification for new order
+function showOrderNotification(count) {
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+    color: white;
+    padding: 1.5rem 2rem;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    z-index: 9999;
+    font-weight: 600;
+    font-size: 1rem;
+    animation: slideIn 0.3s ease;
+  `;
+  
+  toast.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <span style="font-size: 1.5rem;">🔔</span>
+      <div>
+        <p style="margin: 0; font-weight: 700;">New Order${count > 1 ? 's' : ''}!</p>
+        <p style="margin: 0.25rem 0 0 0; opacity: 0.9; font-size: 0.9rem;">${count} pending order${count > 1 ? 's' : ''} waiting for review</p>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(toast);
+  
+  // Auto-remove after 5 seconds
+  setTimeout(() => {
+    toast.style.animation = 'slideOut 0.3s ease';
+    setTimeout(() => toast.remove(), 300);
+  }, 5000);
+}
+
+// Add animations
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes slideIn {
+    from {
+      transform: translateX(400px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  @keyframes slideOut {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(400px);
+      opacity: 0;
+    }
+  }
+`;
+document.head.appendChild(style);
+
+// Check for new orders periodically
+function startOrderMonitoring() {
+  if (orderCheckInterval) clearInterval(orderCheckInterval);
+  
+  orderCheckInterval = setInterval(async () => {
+    try {
+      const response = await fetch('/api/admin/orders', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (!response.ok) return;
+      
+      const orders = await response.json();
+      const pendingOrders = orders.filter(o => o.status === 'pending').length;
+      
+      // Update page title with pending orders count
+      if (pendingOrders > 0) {
+        document.title = `(${pendingOrders}) Admin Dashboard`;
+      } else {
+        document.title = 'Admin Dashboard';
+      }
+      
+      // Update badge
+      const badge = document.getElementById('pendingBadge');
+      if (badge) {
+        if (pendingOrders > 0) {
+          badge.textContent = pendingOrders;
+          badge.style.display = 'inline-flex';
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+      
+      // If new pending orders detected, alert admin
+      if (pendingOrders > lastPendingOrderCount) {
+        const newOrderCount = pendingOrders - lastPendingOrderCount;
+        playNotificationSound();
+        showOrderNotification(newOrderCount);
+      }
+      
+      lastPendingOrderCount = pendingOrders;
+    } catch (error) {
+      console.error('Error checking for new orders:', error);
+    }
+  }, 10000); // Check every 10 seconds
 }
 
 // Check if user is admin
@@ -21,6 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadAllUsers();
   loadUnlimitedUsers();
   loadCodes();
+  startOrderMonitoring();
 
   const form = document.getElementById('generateCodeForm');
   if (form) {
