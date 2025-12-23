@@ -1,5 +1,6 @@
 let token = localStorage.getItem('token');
 let currentUser = localStorage.getItem('currentUser') ? JSON.parse(localStorage.getItem('currentUser')) : null;
+let unlimitedInfo = null;
 let books = [];
 const DISCORD_INVITE_URL = 'https://discord.gg/7TrBn3wBf5'; // TODO: Replace with your actual invite link
 
@@ -54,6 +55,10 @@ async function updateChecksDisplay() {
     const data = await response.json();
     document.getElementById('checksAmount').textContent = data.checks;
     currentUser.checks = data.checks;
+    currentUser.isUnlimited = data.isUnlimited;
+    currentUser.unlimitedInfo = data.unlimitedInfo;
+    unlimitedInfo = data.unlimitedInfo;
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
     
     // Display unlimited status if applicable
     const unlimitedNotice = document.getElementById('unlimitedStatusNotice');
@@ -68,6 +73,19 @@ async function updateChecksDisplay() {
   } catch (error) {
     console.error('Error fetching checks:', error);
   }
+}
+
+function getAvailableCredits() {
+  const regular = Number(currentUser?.checks || 0);
+  if (currentUser?.isUnlimited && currentUser?.unlimitedInfo) {
+    const dailyAvailable = Math.max(0, Number(currentUser.unlimitedInfo.dailyCreditsAvailable || 0));
+    return {
+      total: dailyAvailable + regular,
+      dailyAvailable,
+      regular
+    };
+  }
+  return { total: regular, dailyAvailable: 0, regular };
 }
 
 async function loadBooks() {
@@ -209,8 +227,10 @@ A Turnitin report is provided along with the final rewritten file.</p>
 }
 
 function openBuyModal(bookId, bookTitle, price) {
-  if (currentUser.checks < price) {
-    showMessage('Insufficient credits for this purchase', 'error');
+  const available = getAvailableCredits();
+  if (available.total < price) {
+    const shortfall = price - available.total;
+    showMessage(`Insufficient credits for this purchase. You need ${shortfall} more credit(s).`, 'error');
     return;
   }
 

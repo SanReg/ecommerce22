@@ -9,22 +9,30 @@ router.get('/balance', authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.userId);
     
-    // Check if unlimited and process daily reset if needed
+    // Check if unlimited and process daily reset(s) if needed
     if (user.isUnlimited) {
       const now = new Date();
-      const resetTime = new Date(user.unlimitedSettings.creditsResetAt);
-      
-      // If reset time has passed, reset daily credits
-      if (now > resetTime) {
-        user.unlimitedSettings.dailyCreditsUsedToday = 0;
+
+      // If creditsResetAt is missing, initialize to next UTC midnight
+      if (!user.unlimitedSettings.creditsResetAt) {
         const nextReset = new Date(now);
         nextReset.setUTCHours(24, 0, 0, 0);
         user.unlimitedSettings.creditsResetAt = nextReset;
-        
-        // Decrement subscription days
-        user.unlimitedSettings.subscriptionDaysRemaining--;
-        
-        // If subscription expired, revert to normal
+      }
+
+      // Apply as many resets as have been skipped (handles missed days)
+      while (user.isUnlimited && now > new Date(user.unlimitedSettings.creditsResetAt)) {
+        user.unlimitedSettings.dailyCreditsUsedToday = 0;
+
+        // Move reset window to next midnight
+        const nextReset = new Date(user.unlimitedSettings.creditsResetAt);
+        nextReset.setUTCHours(24, 0, 0, 0);
+        user.unlimitedSettings.creditsResetAt = nextReset;
+
+        // Decrement remaining subscription days per reset
+        user.unlimitedSettings.subscriptionDaysRemaining -= 1;
+
+        // If subscription expired, revert to normal and stop looping
         if (user.unlimitedSettings.subscriptionDaysRemaining <= 0) {
           user.isUnlimited = false;
           user.unlimitedSettings = {
@@ -35,9 +43,9 @@ router.get('/balance', authMiddleware, async (req, res) => {
             dailyCreditsUsedToday: 0
           };
         }
-        
-        await user.save();
       }
+
+      await user.save();
     }
     
     res.json({ 
