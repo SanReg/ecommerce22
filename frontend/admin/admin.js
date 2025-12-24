@@ -1068,14 +1068,22 @@ function displayUnlimitedUsers(users) {
     </thead>
     <tbody>
       ${users.map(user => {
-        const resetDate = new Date(user.unlimitedSettings.creditsResetAt).toLocaleString();
+        const resetDate = new Date(user.unlimitedSettings.creditsResetAt);
+        const resetDateStr = resetDate.toLocaleString('en-US', { 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric', 
+          hour: '2-digit', 
+          minute: '2-digit',
+          timeZoneName: 'short'
+        });
         return `
           <tr style="border-bottom: 1px solid #444;">
             <td style="padding: 1rem;">${user.username}</td>
             <td style="padding: 1rem;">${user.email}</td>
             <td style="padding: 1rem; color: #10b981; font-weight: bold;">${user.unlimitedSettings.dailyCredits}</td>
             <td style="padding: 1rem; color: ${user.unlimitedSettings.subscriptionDaysRemaining <= 5 ? '#ef4444' : '#06b6d4'}; font-weight: bold;">${user.unlimitedSettings.subscriptionDaysRemaining} days</td>
-            <td style="padding: 1rem; font-size: 0.9rem;">${resetDate}</td>
+            <td style="padding: 1rem; font-size: 0.9rem;">${resetDateStr}</td>
             <td style="padding: 1rem;">
               <button onclick="viewUnlimitedUserDetails('${user._id}')" style="background: #6366f1; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">View</button>
             </td>
@@ -1208,7 +1216,7 @@ function showUnlimitedUserDetailsModal(data) {
         <p><strong>Days Remaining:</strong> <span style="color: #06b6d4; font-weight: bold;">${unlimited.subscriptionDaysRemaining} days</span></p>
         <p><strong>Today's Usage:</strong> ${unlimited.dailyCreditsUsedToday} / ${unlimited.dailyCredits}</p>
         <p><strong>Available Today:</strong> <span style="color: #10b981;">${unlimited.dailyCreditsAvailable}</span></p>
-        <p><strong>Next Reset:</strong> ${new Date(unlimited.creditsResetAt).toLocaleString()}</p>
+        <p><strong>Next Reset:</strong> ${new Date(unlimited.creditsResetAt).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}</p>
       </div>
     </div>
 

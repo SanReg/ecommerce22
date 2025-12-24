@@ -64,8 +64,16 @@ async function updateChecksDisplay() {
     const unlimitedNotice = document.getElementById('unlimitedStatusNotice');
     if (data.isUnlimited && data.unlimitedInfo) {
       const info = data.unlimitedInfo;
-      const resetDate = new Date(info.creditsResetAt).toLocaleString();
-      unlimitedNotice.innerHTML = `⭐ <strong>Unlimited User</strong> | Daily Credits: <span style="color: #ffffff; font-weight: bold;">${info.dailyCreditsAvailable}/${info.dailyCredits}</span> | ${info.subscriptionDaysRemaining} days remaining | Resets at ${resetDate}`;
+      const resetDate = new Date(info.creditsResetAt);
+      const resetDateStr = resetDate.toLocaleString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit',
+        timeZoneName: 'short'
+      });
+      unlimitedNotice.innerHTML = `⭐ <strong>Unlimited User</strong> | Daily Credits: <span style="color: #ffffff; font-weight: bold;">${info.dailyCreditsAvailable}/${info.dailyCredits}</span> | ${info.subscriptionDaysRemaining} days remaining | Next Reset: ${resetDateStr}`;
       unlimitedNotice.style.display = 'block';
     } else {
       unlimitedNotice.style.display = 'none';
