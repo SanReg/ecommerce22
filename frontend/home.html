@@ -400,6 +400,72 @@
       letter-spacing: -0.3px;
     }
 
+    /* FAQ (Accordion) */
+    .faq-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      width: 100%;
+    }
+    @media (max-width: 900px) {
+      .faq-list {
+        grid-template-columns: 1fr;
+      }
+    }
+    .faq-item {
+      background: linear-gradient(135deg, var(--card-bg) 0%, rgba(30,41,59,0.6) 100%);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .faq-question {
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      font-weight: 700;
+      padding: 1rem 1.25rem;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.75rem;
+      align-items: start;
+      cursor: pointer;
+      font-size: 1rem;
+      white-space: normal;
+    }
+    .faq-question:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+      border-radius: 8px;
+    }
+    .faq-question span:first-child {
+      display: block;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      line-height: 1.4;
+    }
+    .faq-question span:last-child {
+      transition: transform 0.2s ease;
+    }
+    .faq-question[aria-expanded="true"] span:last-child {
+      transform: rotate(45deg); /* plus to cross */
+    }
+    .faq-answer {
+      padding: 0 1.25rem 1rem 1.25rem;
+      color: var(--text-secondary);
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      transition: max-height 0.25s ease, opacity 0.25s ease;
+      display: none; /* initial hidden for noscript */
+    }
+    .faq-answer.open {
+      display: block;
+      max-height: 800px;
+      opacity: 1;
+    }
+
     .cta-btn:active {
       transform: scale(0.97);
     }
@@ -1021,6 +1087,192 @@
     </div>
   </div>
 
+  <!-- FAQ Section (Accordion) -->
+  <div id="faq" style="max-width: 1200px; margin: 0 auto; padding: 0 1.5rem;">
+    <h3 class="section-title">❓ Frequently Asked Questions (FAQ)</h3>
+    <div class="faq-list" style="display: grid; gap: 1rem;">
+      <!-- Item: Buy Credits -->
+      <div class="faq-item" style="background: linear-gradient(135deg, var(--card-bg) 0%, rgba(30,41,59,0.6) 100%); border: 1px solid var(--card-border); border-radius: 12px; overflow: hidden;">
+        <button class="faq-question" aria-expanded="false" style="width: 100%; text-align: left; background: none; border: none; color: var(--text-primary); font-weight: 700; padding: 1rem 1.25rem; display: grid; grid-template-columns: 1fr auto; gap: 0.75rem; align-items: start; cursor: pointer;">
+          <span>💳 How can I buy credits?</span>
+          <span style="opacity: 0.8;">＋</span>
+        </button>
+        <div class="faq-answer" style="display: none; padding: 0 1.25rem 1rem 1.25rem; color: var(--text-secondary);">
+          <ul class="list">
+            <li>Join our Discord server and create a support ticket</li>
+            <li>Or contact the admin on Telegram: @rs_smooth</li>
+          </ul>
+          <p class="section-sub">After successful payment, you will receive a redeem code. Redeem the code on the website to add credits to your account.</p>
+        </div>
+      </div>
+
+      <!-- Item: Uptime -->
+      <div class="faq-item" style="background: linear-gradient(135deg, var(--card-bg) 0%, rgba(30,41,59,0.6) 100%); border: 1px solid var(--card-border); border-radius: 12px; overflow: hidden;">
+        <button class="faq-question" aria-expanded="false" style="width: 100%; text-align: left; background: none; border: none; color: var(--text-primary); font-weight: 700; padding: 1rem 1.25rem; display: grid; grid-template-columns: 1fr auto; gap: 0.75rem; align-items: start; cursor: pointer;">
+          <span>🌐 How reliable is the service uptime?</span>
+          <span style="opacity: 0.8;">＋</span>
+        </button>
+        <div class="faq-answer" style="display: none; padding: 0 1.25rem 1rem 1.25rem; color: var(--text-secondary);">
+          <ul class="list">
+            <li>You can expect 15–18 hours of smooth Turnitin access daily.</li>
+            <li>Short downtimes may occasionally occur due to maintenance or high traffic.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Item: File Formats -->
+      <div class="faq-item" style="background: linear-gradient(135deg, var(--card-bg) 0%, rgba(30,41,59,0.6) 100%); border: 1px solid var(--card-border); border-radius: 12px; overflow: hidden;">
+        <button class="faq-question" aria-expanded="false" style="width: 100%; text-align: left; background: none; border: none; color: var(--text-primary); font-weight: 700; padding: 1rem 1.25rem; display: grid; grid-template-columns: 1fr auto; gap: 0.75rem; align-items: start; cursor: pointer;">
+          <span>💾 What file formats can I submit?</span>
+          <span style="opacity: 0.8;">＋</span>
+        </button>
+        <div class="faq-answer" style="display: none; padding: 0 1.25rem 1rem 1.25rem; color: var(--text-secondary);">
+          <ul class="list">
+            <li>.pdf</li>
+            <li>.docx</li>
+            <li>.doc</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Item: AI Requirements -->
+      <div class="faq-item" style="background: linear-gradient(135deg, var(--card-bg) 0%, rgba(30,41,59,0.6) 100%); border: 1px solid var(--card-border); border-radius: 12px; overflow: hidden;">
+        <button class="faq-question" aria-expanded="false" style="width: 100%; text-align: left; background: none; border: none; color: var(--text-primary); font-weight: 700; padding: 1rem 1.25rem; display: grid; grid-template-columns: 1fr auto; gap: 0.75rem; align-items: start; cursor: pointer;">
+          <span>⚠️ What are the file requirements for Turnitin AI checks?</span>
+          <span style="opacity: 0.8;">＋</span>
+        </button>
+        <div class="faq-answer" style="display: none; padding: 0 1.25rem 1rem 1.25rem; color: var(--text-secondary);">
+          <ul class="list">
+            <li>File size must be less than 25 MB</li>
+            <li>File must contain more than <strong>350 words</strong></li>
+            <li>File must not exceed <strong>30,000 words</strong></li>
+            <li>File language must be English, Spanish, or Japanese</li>
+          </ul>
+          <p class="section-sub">Submissions that do not meet these requirements may not generate an AI report.</p>
+        </div>
+      </div>
+
+      <!-- Item: Report Time -->
+      <div class="faq-item" style="background: linear-gradient(135deg, var(--card-bg) 0%, rgba(30,41,59,0.6) 100%); border: 1px solid var(--card-border); border-radius: 12px; overflow: hidden;">
+        <button class="faq-question" aria-expanded="false" style="width: 100%; text-align: left; background: none; border: none; color: var(--text-primary); font-weight: 700; padding: 1rem 1.25rem; display: grid; grid-template-columns: 1fr auto; gap: 0.75rem; align-items: start; cursor: pointer;">
+          <span>⏱️ How long does it take to receive my report?</span>
+          <span style="opacity: 0.8;">＋</span>
+        </button>
+        <div class="faq-answer" style="display: none; padding: 0 1.25rem 1rem 1.25rem; color: var(--text-secondary);">
+          <p class="section-sub">Reports are typically delivered within <strong>15 minutes to 2 hours</strong>, depending on system load and queue size.</p>
+        </div>
+      </div>
+
+      <!-- Item: Free? -->
+      <div class="faq-item" style="background: linear-gradient(135deg, var(--card-bg) 0%, rgba(30,41,59,0.6) 100%); border: 1px solid var(--card-border); border-radius: 12px; overflow: hidden;">
+        <button class="faq-question" aria-expanded="false" style="width: 100%; text-align: left; background: none; border: none; color: var(--text-primary); font-weight: 700; padding: 1rem 1.25rem; display: grid; grid-template-columns: 1fr auto; gap: 0.75rem; align-items: start; cursor: pointer;">
+          <span>💸 Is this service free?</span>
+          <span style="opacity: 0.8;">＋</span>
+        </button>
+        <div class="faq-answer" style="display: none; padding: 0 1.25rem 1rem 1.25rem; color: var(--text-secondary);">
+          <p class="section-sub">No. This service is not free. All reports and additional services require credits or payment.</p>
+        </div>
+      </div>
+
+      <!-- Item: Credits expire -->
+      <div class="faq-item" style="background: linear-gradient(135deg, var(--card-bg) 0%, rgba(30,41,59,0.6) 100%); border: 1px solid var(--card-border); border-radius: 12px; overflow: hidden;">
+        <button class="faq-question" aria-expanded="false" style="width: 100%; text-align: left; background: none; border: none; color: var(--text-primary); font-weight: 700; padding: 1rem 1.25rem; display: grid; grid-template-columns: 1fr auto; gap: 0.75rem; align-items: start; cursor: pointer;">
+          <span>⏳ Do credits expire?</span>
+          <span style="opacity: 0.8;">＋</span>
+        </button>
+        <div class="faq-answer" style="display: none; padding: 0 1.25rem 1rem 1.25rem; color: var(--text-secondary);">
+          <p class="section-sub">No. Your credits do not expire and can be used at any time.</p>
+        </div>
+      </div>
+
+      <!-- Item: Missing report -->
+      <div class="faq-item" style="background: linear-gradient(135deg, var(--card-bg) 0%, rgba(30,41,59,0.6) 100%); border: 1px solid var(--card-border); border-radius: 12px; overflow: hidden;">
+        <button class="faq-question" aria-expanded="false" style="width: 100%; text-align: left; background: none; border: none; color: var(--text-primary); font-weight: 700; padding: 1rem 1.25rem; display: grid; grid-template-columns: 1fr auto; gap: 0.75rem; align-items: start; cursor: pointer;">
+          <span>⏳ I didn’t receive my AI or similarity report. What should I do?</span>
+          <span style="opacity: 0.8;">＋</span>
+        </button>
+        <div class="faq-answer" style="display: none; padding: 0 1.25rem 1rem 1.25rem; color: var(--text-secondary);">
+          <ul class="list">
+            <li>Join our Discord server and create a support ticket. OR</li>
+            <li>Contact the admin on Telegram: @rs_smooth</li>
+          </ul>
+          <p class="section-sub">Our support team will assist you promptly.</p>
+        </div>
+      </div>
+
+      <!-- Item: Discord vs Website credits -->
+      <div class="faq-item" style="background: linear-gradient(135deg, var(--card-bg) 0%, rgba(30,41,59,0.6) 100%); border: 1px solid var(--card-border); border-radius: 12px; overflow: hidden;">
+        <button class="faq-question" aria-expanded="false" style="width: 100%; text-align: left; background: none; border: none; color: var(--text-primary); font-weight: 700; padding: 1rem 1.25rem; display: grid; grid-template-columns: 1fr auto; gap: 0.75rem; align-items: start; cursor: pointer;">
+          <span>❓ My credits appear in Discord but not on the website. Why?</span>
+          <span style="opacity: 0.8;">＋</span>
+        </button>
+        <div class="faq-answer" style="display: none; padding: 0 1.25rem 1rem 1.25rem; color: var(--text-secondary);">
+          <ol class="list" style="list-style: decimal;">
+            <li>Join our Discord server and create a support ticket</li>
+            <li>Contact a moderator or admin</li>
+            <li>You will receive a redeem code equivalent to your Discord credits</li>
+            <li>Redeem the code on the website to receive your credits</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- Item: Humanize / Rewrite -->
+      <div class="faq-item" style="background: linear-gradient(135deg, var(--card-bg) 0%, rgba(30,41,59,0.6) 100%); border: 1px solid var(--card-border); border-radius: 12px; overflow: hidden;">
+        <button class="faq-question" aria-expanded="false" style="width: 100%; text-align: left; background: none; border: none; color: var(--text-primary); font-weight: 700; padding: 1rem 1.25rem; display: grid; grid-template-columns: 1fr auto; gap: 0.75rem; align-items: start; cursor: pointer;">
+          <span>🤖 Can you humanize or rewrite AI-generated text?</span>
+          <span style="opacity: 0.8;">＋</span>
+        </button>
+        <div class="faq-answer" style="display: none; padding: 0 1.25rem 1rem 1.25rem; color: var(--text-secondary);">
+          <p class="section-sub">Yes, absolutely. To request Humanization / Rewrite, simply join our Discord server and create a support ticket.</p>
+        </div>
+      </div>
+
+      <!-- Item: Privacy -->
+      <div class="faq-item" style="background: linear-gradient(135deg, var(--card-bg) 0%, rgba(30,41,59,0.6) 100%); border: 1px solid var(--card-border); border-radius: 12px; overflow: hidden;">
+        <button class="faq-question" aria-expanded="false" style="width: 100%; text-align: left; background: none; border: none; color: var(--text-primary); font-weight: 700; padding: 1rem 1.25rem; display: grid; grid-template-columns: 1fr auto; gap: 0.75rem; align-items: start; cursor: pointer;">
+          <span>🔒 Is my document stored or shared anywhere?</span>
+          <span style="opacity: 0.8;">＋</span>
+        </button>
+        <div class="faq-answer" style="display: none; padding: 0 1.25rem 1rem 1.25rem; color: var(--text-secondary);">
+          <ul class="list">
+            <li>Your document is only analyzed in Turnitin</li>
+            <li>It is not added to Turnitin’s global database</li>
+            <li>After processing, your working copy is immediately deleted</li>
+          </ul>
+          <p class="section-sub">Your content remains 100% private and secure.</p>
+        </div>
+      </div>
+
+      <!-- Item: Report Issues -->
+      <div class="faq-item" style="background: linear-gradient(135deg, var(--card-bg) 0%, rgba(30,41,59,0.6) 100%); border: 1px solid var(--card-border); border-radius: 12px; overflow: hidden;">
+        <button class="faq-question" aria-expanded="false" style="width: 100%; text-align: left; background: none; border: none; color: var(--text-primary); font-weight: 700; padding: 1rem 1.25rem; display: grid; grid-template-columns: 1fr auto; gap: 0.75rem; align-items: start; cursor: pointer;">
+          <span>🛠️ I’m facing bugs or technical issues. How can I report them?</span>
+          <span style="opacity: 0.8;">＋</span>
+        </button>
+        <div class="faq-answer" style="display: none; padding: 0 1.25rem 1rem 1.25rem; color: var(--text-secondary);">
+          <ul class="list">
+            <li>Join our Discord server and create a support ticket</li>
+            <li>Or contact the admin on Telegram: <strong>@rs_smooth</strong></li>
+          </ul>
+          <p class="section-sub">The website is newly built, and user feedback is highly appreciated to help us improve.</p>
+        </div>
+      </div>
+
+      <!-- Item: Asterisk meaning -->
+      <div class="faq-item" style="background: linear-gradient(135deg, var(--card-bg) 0%, rgba(30,41,59,0.6) 100%); border: 1px solid var(--card-border); border-radius: 12px; overflow: hidden;">
+        <button class="faq-question" aria-expanded="false" style="width: 100%; text-align: left; background: none; border: none; color: var(--text-primary); font-weight: 700; padding: 1rem 1.25rem; display: grid; grid-template-columns: 1fr auto; gap: 0.75rem; align-items: start; cursor: pointer;">
+          <span>🤖 Turnitin AI Detection – What Does “*” Mean?</span>
+          <span style="opacity: 0.8;">＋</span>
+        </button>
+        <div class="faq-answer" style="display: none; padding: 0 1.25rem 1rem 1.25rem; color: var(--text-secondary);">
+          <p class="section-sub">Turnitin has updated its AI detection system to improve accuracy and reduce false positives.</p>
+          <h4 style="margin-top: 0.75rem;">🔍 What does the “*” symbol indicate?</h4>
+          <p class="section-sub">If AI-generated content is below <strong>20%</strong>, Turnitin will not display an exact percentage. Instead, it shows an asterisk (*), meaning AI-generated content was detected but remains under the 20% threshold.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <footer class="footer">
     <div class="footer-content">
       <div class="footer-section">
@@ -1091,7 +1343,12 @@
     } else {
       // User is not logged in
       navMenu.innerHTML = `<button class="nav-btn nav-btn-secondary" onclick="window.location.href = '/login.html'">Login</button><button class="nav-btn nav-btn-primary" onclick="window.location.href = '/register.html'">Register</button>`;
-      ctaButtons.innerHTML = `<button class="cta-btn cta-btn-primary" onclick="window.location.href = '/login.html'">Login</button><button class="cta-btn cta-btn-secondary" onclick="window.location.href = '/register.html'">Create Account</button>`;
+      ctaButtons.innerHTML = `
+        <button class="cta-btn cta-btn-primary" onclick="window.location.href = '/login.html'">Login</button>
+        <button class="cta-btn cta-btn-secondary" onclick="window.location.href = '/register.html'">Create Account</button>
+        <div style="flex-basis: 100%; height: 0;"></div>
+        <a href="#faq" style="display: block; width: 100%; text-align: center; margin-top: 0.5rem; color: var(--accent); text-decoration: underline; font-weight: 600;">See FAQ</a>
+      `;
     }
 
     function logout() {
@@ -1109,6 +1366,40 @@
         ticking = true;
       }
     }, { passive: true });
+  </script>
+  <script>
+    // FAQ accordion: toggle answers on question click
+    document.addEventListener('DOMContentLoaded', () => {
+      const questions = document.querySelectorAll('.faq-question');
+      questions.forEach(q => {
+        const answer = q.nextElementSibling;
+        const icon = q.lastElementChild; // trailing icon span
+        if (answer) {
+          answer.classList.remove('open');
+          answer.style.display = 'none';
+        }
+        q.addEventListener('click', () => {
+          const expanded = q.getAttribute('aria-expanded') === 'true';
+          const nextExpanded = (!expanded).toString();
+          q.setAttribute('aria-expanded', nextExpanded);
+          if (answer) {
+            if (expanded) {
+              // collapse
+              answer.classList.remove('open');
+              // allow transition by delaying display none
+              setTimeout(() => { answer.style.display = 'none'; }, 200);
+            } else {
+              // expand
+              answer.style.display = 'block';
+              requestAnimationFrame(() => answer.classList.add('open'));
+            }
+          }
+          if (icon) {
+            icon.textContent = expanded ? '＋' : '－';
+          }
+        });
+      });
+    });
   </script>
 
   <!--Start of Tawk.to Script-->
