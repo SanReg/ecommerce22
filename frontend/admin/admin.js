@@ -2,6 +2,7 @@ let token = localStorage.getItem('token');
 let currentUser = localStorage.getItem('currentUser') ? JSON.parse(localStorage.getItem('currentUser')) : null;
 let allOrders = [];
 let allUsers = [];
+let allUnlimitedUsers = [];
 let lastPendingOrderCount = 0;
 let orderCheckInterval = null;
 
@@ -385,6 +386,15 @@ async function loadAllUsers() {
     allUsers = Array.isArray(users) ? users : [];
     displayAllUsers(allUsers);
     refreshUsersView();
+    
+    // Add search listener
+    const usersSearchInput = document.getElementById('usersSearchInput');
+    if (usersSearchInput) {
+      usersSearchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        filterAndDisplayUsers(query);
+      });
+    }
   } catch (error) {
     showMessage('Error loading users', 'error');
   }
@@ -442,6 +452,117 @@ function displayAllUsers(users) {
     const date = userDateTime.toLocaleDateString();
     const time = userDateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+    const userOrders = allOrders.filter(o => {
+      if (!o.user) return false;
+      const orderUserId = typeof o.user === 'object' ? (o.user._id || o.user.id || o.user) : o.user;
+      return String(orderUserId) === String(user._id);
+    });
+    const userTotal = userOrders.length;
+    const userCompleted = userOrders.filter(o => o.status === 'completed').length;
+    const userFailed = userOrders.filter(o => o.status === 'failed').length;
+    const userPending = userOrders.filter(o => o.status === 'pending').length;
+    
+    html += `
+      <div style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border: 2px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.08); transition: all 0.3s ease;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #e2e8f0;">
+          <h3 style="margin: 0; color: #1a202c; font-size: 1.1rem;">${user.username}</h3>
+          <span style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 0.4rem 0.8rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem;">${user.checks} Checks</span>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; color: #666;">
+            <span style="font-weight: 600; color: #1a202c;">📧 Email:</span>
+            <span>${user.email}</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.5rem; color: #666;">
+            <span style="font-weight: 600; color: #1a202c;">📅 Joined:</span>
+            <span>${date} at ${time}</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem;">
+            <span style="background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 6px; padding: 0.35rem 0.5rem; font-size: 0.8rem; color: #1f2937; text-align: center;">Total: <strong>${userTotal}</strong></span>
+            <span style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px; padding: 0.35rem 0.5rem; font-size: 0.8rem; color: #065f46; text-align: center;">Completed: <strong>${userCompleted}</strong></span>
+            <span style="background: #fee2e2; border: 1px solid #fca5a5; border-radius: 6px; padding: 0.35rem 0.5rem; font-size: 0.8rem; color: #7f1d1d; text-align: center;">Failed: <strong>${userFailed}</strong></span>
+            <span style="background: #fef3c7; border: 1px solid #fcd34d; border-radius: 6px; padding: 0.35rem 0.5rem; font-size: 0.8rem; color: #92400e; text-align: center;">Pending: <strong>${userPending}</strong></span>
+          </div>
+        </div>
+        
+        <button class="btn-secondary" onclick="viewUserDetails('${user._id}')" style="width: 100%; padding: 0.7rem; font-size: 0.95rem;">👁️ View Orders</button>
+      </div>
+    `;
+  });
+
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+// Filter and display users based on search query
+function filterAndDisplayUsers(query) {
+  if (!query) {
+    displayAllUsers(allUsers);
+    return;
+  }
+  
+  const filtered = allUsers.filter(user => {
+    const username = (user.username || '').toLowerCase();
+    const email = (user.email || '').toLowerCase();
+    return username.includes(query) || email.includes(query);
+  });
+  
+  displayAllUsersFiltered(filtered);
+}
+
+function displayAllUsersFiltered(filteredUsers) {
+  const container = document.getElementById('allUsersContainer');
+  
+  if (filteredUsers.length === 0) {
+    container.innerHTML = '<div class="empty-state"><h2>No users found</h2></div>';
+    return;
+  }
+
+  // Platform stats (from ALL users and orders, not filtered)
+  const totalUsers = allUsers.length;
+  const totalOrders = allOrders.length;
+  const completedOrders = allOrders.filter(o => o.status === 'completed').length;
+  const failedOrders = allOrders.filter(o => o.status === 'failed').length;
+  const pendingOrders = allOrders.filter(o => o.status === 'pending').length;
+  const totalUserCredits = allUsers.reduce((sum, u) => sum + (Number(u.checks) || 0), 0);
+
+  let html = `
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-top: 1rem;">
+      <div style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border: 2px solid #e2e8f0; border-radius: 12px; padding: 1rem; text-align: center;">
+        <div style="color: #6b7280; font-size: 0.85rem;">Total Users</div>
+        <div style="color: #1f2937; font-size: 1.3rem; font-weight: 800;">${totalUsers}</div>
+      </div>
+      <div style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border: 2px solid #e2e8f0; border-radius: 12px; padding: 1rem; text-align: center;">
+        <div style="color: #6b7280; font-size: 0.85rem;">Total Orders</div>
+        <div style="color: #1f2937; font-size: 1.3rem; font-weight: 800;">${totalOrders}</div>
+      </div>
+      <div style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border: 2px solid #a7f3d0; border-radius: 12px; padding: 1rem; text-align: center;">
+        <div style="color: #065f46; font-size: 0.85rem;">Completed</div>
+        <div style="color: #065f46; font-size: 1.3rem; font-weight: 800;">${completedOrders}</div>
+      </div>
+      <div style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border: 2px solid #fca5a5; border-radius: 12px; padding: 1rem; text-align: center;">
+        <div style="color: #7f1d1d; font-size: 0.85rem;">Failed</div>
+        <div style="color: #7f1d1d; font-size: 1.3rem; font-weight: 800;">${failedOrders}</div>
+      </div>
+      <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid #fcd34d; border-radius: 12px; padding: 1rem; text-align: center;">
+        <div style="color: #92400e; font-size: 0.85rem;">Pending</div>
+        <div style="color: #92400e; font-size: 1.3rem; font-weight: 800;">${pendingOrders}</div>
+      </div>
+      <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 2px solid #bfdbfe; border-radius: 12px; padding: 1rem; text-align: center;">
+        <div style="color: #1e40af; font-size: 0.85rem;">Total User Credits</div>
+        <div style="color: #1e40af; font-size: 1.3rem; font-weight: 800;">${totalUserCredits}</div>
+      </div>
+    </div>
+  `;
+
+  // Display only filtered users
+  html += `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.2rem; margin-top: 2rem;">`;
+  
+  filteredUsers.forEach(user => {
+    const date = new Date(user.createdAt).toLocaleDateString();
+    const time = new Date(user.createdAt).toLocaleTimeString();
+    
     const userOrders = allOrders.filter(o => {
       if (!o.user) return false;
       const orderUserId = typeof o.user === 'object' ? (o.user._id || o.user.id || o.user) : o.user;
@@ -1008,7 +1129,17 @@ async function loadUnlimitedUsers() {
       throw new Error('Invalid response format from server');
     }
     
+    allUnlimitedUsers = users;
     displayUnlimitedUsers(users);
+    
+    // Add search listener
+    const unlimitedSearchInput = document.getElementById('unlimitedSearchInput');
+    if (unlimitedSearchInput) {
+      unlimitedSearchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        filterAndDisplayUnlimitedUsers(query);
+      });
+    }
   } catch (error) {
     showMessage('Error loading unlimited users: ' + error.message, 'error');
     const container = document.getElementById('unlimitedUsersContainer');
@@ -1032,15 +1163,33 @@ function displayUnlimitedUsers(users) {
   convertBtn.style.cssText = 'margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid #444;';
   convertBtn.innerHTML = `
     <h3 style="margin-bottom: 1rem;">Convert User to Unlimited</h3>
-    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 1rem; margin-bottom: 1.5rem;">
-      <select id="selectUser" style="padding: 0.75rem; border-radius: 4px; background: #1a1a2e; color: white; border: 1px solid #444;">
-        <option value="">Select a user...</option>
-      </select>
-      <input type="number" id="dailyCredits" placeholder="Daily Credits" min="1" style="padding: 0.75rem; border-radius: 4px; background: #1a1a2e; color: white; border: 1px solid #444;">
-      <input type="number" id="subDays" placeholder="Subscription Days" min="1" style="padding: 0.75rem; border-radius: 4px; background: #1a1a2e; color: white; border: 1px solid #444;">
-      <button onclick="makeUserUnlimited()" style="background: #10b981; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; font-weight: 600;">Make Unlimited</button>
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 1rem; margin-bottom: 1.5rem; grid-auto-flow: dense;">
+      <div style="position: relative; grid-column: span 1;">
+        <input type="text" id="searchUserInput" placeholder="🔍 Search user by name/email" style="width: 100%; padding: 0.75rem; border-radius: 4px; background: #1a1a2e; color: white; border: 1px solid #444; font-size: 0.9rem;">
+        <div id="userSearchDropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: #1a1a2e; border: 1px solid #444; border-radius: 4px; max-height: 200px; overflow-y: auto; z-index: 1000;"></div>
+      </div>
+      <input type="number" id="dailyCredits" placeholder="Daily Credits" min="1" style="width: 100%; padding: 0.75rem; border-radius: 4px; background: #1a1a2e; color: white; border: 1px solid #444; font-size: 0.9rem;">
+      <input type="number" id="subDays" placeholder="Subscription Days" min="1" style="width: 100%; padding: 0.75rem; border-radius: 4px; background: #1a1a2e; color: white; border: 1px solid #444; font-size: 0.9rem;">
+      <button onclick="makeUserUnlimited()" style="background: #10b981; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.9rem; white-space: nowrap;">Make Unlimited</button>
     </div>
+    <div id="selectedUserInfo" style="padding: 0.75rem; background: #0f172a; border: 1px solid #444; border-radius: 4px; display: none; margin-bottom: 1rem; color: #06b6d4; font-size: 0.9rem;"></div>
   `;
+  convertBtn.appendChild(document.createElement('style')).textContent = `
+    @media (max-width: 1200px) {
+      #convertBtn_form { grid-template-columns: 1fr 1fr 1fr !important; }
+    }
+    @media (max-width: 768px) {
+      #convertBtn_form { 
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem !important;
+      }
+      #convertBtn_form button { width: 100%; }
+    }
+  `;
+  
+  const formDiv = convertBtn.querySelector('div');
+  if (formDiv) formDiv.id = 'convertBtn_form';
+  
   container.appendChild(convertBtn);
   
   // Populate user dropdown with all non-unlimited users
@@ -1054,6 +1203,7 @@ function displayUnlimitedUsers(users) {
 
   const table = document.createElement('table');
   table.style.cssText = 'width: 100%; border-collapse: collapse; margin-top: 2rem;';
+  table.id = 'unlimitedUsersTable';
   
   table.innerHTML = `
     <thead>
@@ -1093,6 +1243,56 @@ function displayUnlimitedUsers(users) {
     </tbody>
   `;
 
+  // Add mobile-friendly styles
+  const mobileStyle = document.createElement('style');
+  mobileStyle.textContent = `
+    @media (max-width: 768px) {
+      #unlimitedUsersTable {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      #unlimitedUsersTable thead {
+        display: none;
+      }
+      #unlimitedUsersTable tbody {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1rem;
+      }
+      #unlimitedUsersTable tr {
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #444 !important;
+        border-radius: 8px;
+        padding: 1rem;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      }
+      #unlimitedUsersTable td {
+        padding: 0.5rem 0 !important;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      #unlimitedUsersTable td:before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #999;
+        font-size: 0.85rem;
+      }
+      #unlimitedUsersTable button {
+        width: 100%;
+        margin-top: 0.5rem;
+      }
+    }
+    @media (max-width: 480px) {
+      #unlimitedUsersTable tbody {
+        grid-template-columns: 1fr;
+      }
+    }
+  `;
+  document.head.appendChild(mobileStyle);
+
   container.appendChild(table);
 }
 
@@ -1103,28 +1303,81 @@ async function loadAllUsersForUnlimited() {
     });
 
     const users = await response.json();
-    const userSelect = document.getElementById('selectUser');
+    const nonUnlimitedUsers = users.filter(u => !u.isUnlimited);
     
-    users.forEach(user => {
-      if (!user.isUnlimited) {
-        const option = document.createElement('option');
-        option.value = user._id;
-        option.textContent = `${user.username} (${user.email})`;
-        userSelect.appendChild(option);
-      }
-    });
+    // Store users globally for search
+    window.allNonUnlimitedUsers = nonUnlimitedUsers;
+    window.selectedUserId = null;
+    
+    // Set up search input
+    const searchInput = document.getElementById('searchUserInput');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        filterUserSearchResults(query, nonUnlimitedUsers);
+      });
+    }
   } catch (error) {
     console.error('Error loading users:', error);
   }
 }
 
+function filterUserSearchResults(query, users) {
+  const dropdown = document.getElementById('userSearchDropdown');
+  const selectedUserInfo = document.getElementById('selectedUserInfo');
+  
+  if (!query) {
+    dropdown.style.display = 'none';
+    return;
+  }
+  
+  const filtered = users.filter(user => {
+    const username = (user.username || '').toLowerCase();
+    const email = (user.email || '').toLowerCase();
+    return username.includes(query) || email.includes(query);
+  });
+  
+  if (filtered.length === 0) {
+    dropdown.innerHTML = '<div style="padding: 0.75rem; color: #999;">No users found</div>';
+    dropdown.style.display = 'block';
+    return;
+  }
+  
+  dropdown.innerHTML = filtered.map(user => `
+    <div onclick="selectUserForUnlimited('${user._id}', '${user.username}', '${user.email}')" 
+         style="padding: 0.75rem 1rem; cursor: pointer; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s;">
+      <div>
+        <div style="color: white; font-weight: 600;">${user.username}</div>
+        <div style="color: #999; font-size: 0.85rem;">${user.email}</div>
+      </div>
+      <span style="color: #10b981; font-weight: 600;">💳 ${user.checks}</span>
+    </div>
+  `).join('');
+  
+  dropdown.style.display = 'block';
+}
+
+function selectUserForUnlimited(userId, username, email) {
+  window.selectedUserId = userId;
+  const searchInput = document.getElementById('searchUserInput');
+  const dropdown = document.getElementById('userSearchDropdown');
+  const selectedUserInfo = document.getElementById('selectedUserInfo');
+  
+  searchInput.value = `${username} (${email})`;
+  dropdown.style.display = 'none';
+  
+  selectedUserInfo.style.display = 'block';
+  selectedUserInfo.innerHTML = `✓ Selected: <strong>${username}</strong> - ${email}`;
+}
+
+
 async function makeUserUnlimited() {
-  const userId = document.getElementById('selectUser').value;
+  const userId = window.selectedUserId;
   const dailyCredits = parseInt(document.getElementById('dailyCredits').value);
   const subscriptionDays = parseInt(document.getElementById('subDays').value);
 
   if (!userId || !dailyCredits || !subscriptionDays) {
-    showMessage('Please fill in all fields', 'error');
+    showMessage('Please select a user and fill in all fields', 'error');
     return;
   }
 
@@ -1142,9 +1395,11 @@ async function makeUserUnlimited() {
     
     if (response.ok) {
       showMessage('User converted to unlimited successfully!', 'success');
-      document.getElementById('selectUser').value = '';
+      document.getElementById('searchUserInput').value = '';
       document.getElementById('dailyCredits').value = '';
       document.getElementById('subDays').value = '';
+      document.getElementById('selectedUserInfo').style.display = 'none';
+      window.selectedUserId = null;
       loadUnlimitedUsers();
     } else {
       showMessage(data.message || 'Error converting user', 'error');
@@ -1372,5 +1627,21 @@ async function revertUnlimited(userId) {
   } catch (error) {
     showMessage('Error: ' + error.message, 'error');
   }
+}
+
+// Filter and display unlimited users based on search query
+function filterAndDisplayUnlimitedUsers(query) {
+  if (!query) {
+    displayUnlimitedUsers(allUnlimitedUsers);
+    return;
+  }
+  
+  const filtered = allUnlimitedUsers.filter(user => {
+    const username = (user.username || '').toLowerCase();
+    const email = (user.email || '').toLowerCase();
+    return username.includes(query) || email.includes(query);
+  });
+  
+  displayUnlimitedUsers(filtered);
 }
 
