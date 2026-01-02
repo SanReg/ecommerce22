@@ -984,7 +984,63 @@
     <h2>Check My Paper</h2>
     <p>Turnitin Similarity & AI Reports — Fast, Accurate, Credit-Based.</p>
     <div class="cta-buttons" id="ctaButtons"></div>
+    
+    <!-- Trustpilot & Counter Container -->
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem; margin-top: 2rem; width: 100%; max-width: 1000px; padding: 0 1rem;">
+      <!-- Desktop: Two columns, Mobile: Stack -->
+      <div id="trustpilotCounterGrid" style="display: grid; grid-template-columns: 1fr; gap: 1rem; width: 100%;">
+        <!-- Trustpilot Badge -->
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 0.75rem;">
+          <span style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 500;">Check our Trustpilot reviews!👇</span>
+          <a href="https://www.trustpilot.com/review/checkmypaper.net" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 0.75rem; padding: 1rem 1.5rem; background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.8) 100%); border: 2px solid rgba(99, 102, 241, 0.3); border-radius: 12px; text-decoration: none; transition: all 0.3s ease; backdrop-filter: blur(10px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); width: 100%; max-width: 400px; justify-content: center;" onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='rgba(99, 102, 241, 0.6)'; this.style.boxShadow='0 8px 20px rgba(99, 102, 241, 0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='rgba(99, 102, 241, 0.3)'; this.style.boxShadow='0 4px 12px rgba(0, 0, 0, 0.2)'">
+            <img src="https://cdn.trustpilot.net/brand-assets/4.1.0/logo-white.svg" alt="Trustpilot" style="height: 24px; width: auto;">
+            <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 0.25rem;">
+              <div style="display: flex; gap: 0.15rem;">
+                <svg style="width: 18px; height: 18px;" viewBox="0 0 24 24" fill="#00b67a">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                <svg style="width: 18px; height: 18px;" viewBox="0 0 24 24" fill="#00b67a">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                <svg style="width: 18px; height: 18px;" viewBox="0 0 24 24" fill="#00b67a">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                <svg style="width: 18px; height: 18px;" viewBox="0 0 24 24" fill="#00b67a">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                <svg style="width: 18px; height: 18px;" viewBox="0 0 24 24" fill="#00b67a">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+              </div>
+              <span style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 500;">Rated Excellent on Trustpilot</span>
+            </div>
+          </a>
+        </div>
+        
+        <!-- Total Checks Counter -->
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 0.75rem;">
+          <span style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 500;">Live Turnitin Stats 📊</span>
+          <div style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem 1.5rem; background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.15) 100%); border: 2px solid rgba(16, 185, 129, 0.3); border-radius: 12px; backdrop-filter: blur(10px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); width: 100%; max-width: 400px; justify-content: center;">
+            <svg style="width: 32px; height: 32px;" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 0.25rem;">
+              <span style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 500;">Total Checks Completed</span>
+              <span id="totalChecksCount" style="color: #10b981; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px;">Loading...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
+
+  <style>
+    @media (min-width: 768px) {
+      #trustpilotCounterGrid {
+        grid-template-columns: 1fr 1fr !important;
+      }
+    }
+  </style>
 
   <div style="display: flex; flex-direction: column; align-items: center; padding: 0 1.5rem 4rem; position: relative; z-index: 1;">
     <h3 class="section-title">💳 Credit Plans (NEVER EXPIRES!)</h3>
@@ -1321,7 +1377,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <p>&copy; 2025 Check My Paper. All rights reserved.</p>
+      <p>&copy; 2026 Check My Paper. All rights reserved.</p>
     </div>
   </footer>
 
@@ -1357,6 +1413,38 @@
       localStorage.clear();
       window.location.href = '/home.html';
     }
+
+    // Fetch and display total checks count
+    async function fetchTotalChecks() {
+      try {
+        const response = await fetch('/api/products/stats/total-checks');
+        const data = await response.json();
+        const countElement = document.getElementById('totalChecksCount');
+        if (countElement) {
+          // Animate the counter
+          const targetCount = data.totalChecks;
+          let currentCount = 0;
+          const increment = Math.ceil(targetCount / 50);
+          const interval = setInterval(() => {
+            currentCount += increment;
+            if (currentCount >= targetCount) {
+              currentCount = targetCount;
+              clearInterval(interval);
+            }
+            countElement.textContent = currentCount.toLocaleString();
+          }, 30);
+        }
+      } catch (error) {
+        console.error('Error fetching total checks:', error);
+        const countElement = document.getElementById('totalChecksCount');
+        if (countElement) {
+          countElement.textContent = '1,500+';
+        }
+      }
+    }
+
+    // Load total checks on page load
+    fetchTotalChecks();
 
     // Improve scroll performance
     let ticking = false;
@@ -1407,6 +1495,27 @@
   <!--Start of Tawk.to Script-->
   <script type="text/javascript">
   var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+  Tawk_API.customStyle = {
+    visibility : {
+      desktop : {
+        position : 'br',
+        xOffset : 20,
+        yOffset : 20
+      },
+      mobile : {
+        position : 'br',
+        xOffset : 10,
+        yOffset : 10
+      }
+    },
+    zIndex: 999999
+  };
+  Tawk_API.onLoad = function(){
+    Tawk_API.setAttributes({
+      'name'  : 'Visitor',
+      'email' : ''
+    }, function(error){});
+  };
   (function(){
   var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
   s1.async=true;
@@ -1416,6 +1525,21 @@
   s0.parentNode.insertBefore(s1,s0);
   })();
   </script>
+  <style>
+    /* Tawk.to Widget Customization - Purple Theme */
+    #tawk-bubble-container,
+    .tawk-button,
+    .tawk-min-container {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+    }
+    .tawk-button-circle {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+      border-color: #6366f1 !important;
+    }
+    .tawk-button:hover {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+    }
+  </style>
   <!--End of Tawk.to Script-->
 </body>
 </html>

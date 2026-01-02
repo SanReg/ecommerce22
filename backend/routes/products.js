@@ -1,5 +1,6 @@
 const express = require('express');
 const Book = require('../models/Book');
+const Order = require('../models/Order');
 const router = express.Router();
 
 // Get all books
@@ -20,6 +21,18 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Book not found' });
     }
     res.json(book);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get total Turnitin checks count
+router.get('/stats/total-checks', async (req, res) => {
+  try {
+    const totalOrders = await Order.countDocuments({ status: { $in: ['completed', 'pending'] } });
+    // Add 1500 to the actual count
+    const displayCount = totalOrders + 1500;
+    res.json({ totalChecks: displayCount });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

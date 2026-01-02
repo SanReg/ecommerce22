@@ -404,7 +404,7 @@ Accepted file types: .docx, .pdf, .doc</small>
       </div>
     </div>
     <div class="footer-bottom">
-      <p>&copy; 2025 Check My Paper. All rights reserved.</p>
+      <p>&copy; 2026 Check My Paper. All rights reserved.</p>
     </div>
   </footer>
 
@@ -413,6 +413,27 @@ Accepted file types: .docx, .pdf, .doc</small>
   <!--Start of Tawk.to Script-->
   <script type="text/javascript">
   var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+  Tawk_API.customStyle = {
+    visibility : {
+      desktop : {
+        position : 'br',
+        xOffset : 20,
+        yOffset : 20
+      },
+      mobile : {
+        position : 'br',
+        xOffset : 10,
+        yOffset : 10
+      }
+    },
+    zIndex: 999999
+  };
+  Tawk_API.onLoad = function(){
+    Tawk_API.setAttributes({
+      'name'  : 'User',
+      'email' : ''
+    }, function(error){});
+  };
   (function(){
   var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
   s1.async=true;
@@ -422,6 +443,21 @@ Accepted file types: .docx, .pdf, .doc</small>
   s0.parentNode.insertBefore(s1,s0);
   })();
   </script>
+  <style>
+    /* Tawk.to Widget Customization - Purple Theme */
+    #tawk-bubble-container,
+    .tawk-button,
+    .tawk-min-container {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+    }
+    .tawk-button-circle {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+      border-color: #6366f1 !important;
+    }
+    .tawk-button:hover {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+    }
+  </style>
   <!--End of Tawk.to Script-->
 </body>
 </html>

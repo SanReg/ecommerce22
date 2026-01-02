@@ -146,35 +146,6 @@ function displayServices() {
   `;
   container.appendChild(cardTurnitin);
 
-  // Assignment Help (Discord)
-  const cardAssignment = document.createElement('div');
-  cardAssignment.style.cssText = `
-    background: linear-gradient(135deg, rgba(236, 72, 153, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
-    border: 2px solid var(--card-border);
-    border-radius: 12px;
-    padding: 2rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    transition: all 0.3s ease;
-    cursor: pointer;
-  `;
-  cardAssignment.onmouseover = (e) => e.currentTarget.style.transform = 'translateY(-4px)';
-  cardAssignment.onmouseout = (e) => e.currentTarget.style.transform = 'translateY(0)';
-  
-  cardAssignment.innerHTML = `
-    <div style="margin-bottom: 1.5rem;">
-      <div style="font-size: 2.5rem; margin-bottom: 1rem;">💬</div>
-      <h3 style="font-size: 1.3rem; margin-bottom: 0.75rem; color: var(--text-primary);">Full Assignment Help</h3>
-      <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">Assignments are written 100% by human experts from scratch, with 0% AI detection on Turnitin. Includes complete research, proper structure, and full citations (APA / MLA / Harvard).</p>
-    </div>
-    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid var(--card-border);">
-      <span style="background: linear-gradient(135deg, #a89968 0%, #8b7d5e 100%); color: white; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem;">✨ Inquire</span>
-      <a href="${DISCORD_INVITE_URL}" target="_blank" rel="noopener" style="background: linear-gradient(135deg, #ec4899 0%, #f97316 100%); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: 600; text-decoration: none; transition: all 0.3s ease; display: inline-block;">Open Discord →</a>
-    </div>
-  `;
-  container.appendChild(cardAssignment);
-
   // Rewrite (Discord)
   const cardRewrite = document.createElement('div');
   cardRewrite.style.cssText = `
