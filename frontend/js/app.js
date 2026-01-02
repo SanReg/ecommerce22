@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadBooks();
   setupTabButtons();
   checkServiceStatus();
+  setupPasswordChangeForm();
 });
 
 function setupTabButtons() {
@@ -526,3 +527,80 @@ function displayServiceStatusNotice(isOnline) {
     notice.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.2)';
   }
 }
+
+function setupPasswordChangeForm() {
+  const form = document.getElementById('changePasswordForm');
+  const messageDiv = document.getElementById('passwordMessage');
+  
+  if (!form) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    messageDiv.style.display = 'none';
+
+    const oldPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      showPasswordMessage('All fields are required', 'error');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      showPasswordMessage('New password must be at least 6 characters', 'error');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      showPasswordMessage('New passwords do not match', 'error');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          oldPassword,
+          newPassword,
+          confirmPassword
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        showPasswordMessage('✅ Password changed successfully!', 'success');
+        form.reset();
+        setTimeout(() => {
+          messageDiv.style.display = 'none';
+        }, 5000);
+      } else {
+        showPasswordMessage(`❌ ${data.message || 'Failed to change password'}`, 'error');
+      }
+    } catch (error) {
+      showPasswordMessage('❌ Error changing password: ' + error.message, 'error');
+    }
+  });
+}
+
+function showPasswordMessage(message, type) {
+  const messageDiv = document.getElementById('passwordMessage');
+  messageDiv.textContent = message;
+  messageDiv.style.display = 'block';
+  
+  if (type === 'success') {
+    messageDiv.style.background = 'rgba(16, 185, 129, 0.2)';
+    messageDiv.style.color = '#10b981';
+    messageDiv.style.borderLeft = '4px solid #10b981';
+  } else {
+    messageDiv.style.background = 'rgba(239, 68, 68, 0.2)';
+    messageDiv.style.color = '#ef4444';
+    messageDiv.style.borderLeft = '4px solid #ef4444';
+  }
+}
+

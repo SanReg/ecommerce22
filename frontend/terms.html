@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Terms of Service - CheckMyPaper.net">
+  <title>Terms of Service - Check My Paper</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --secondary: #ec4899;
+      --accent: #06b6d4;
+      --bg-dark: #0f172a;
+      --bg-darker: #020617;
+      --card-bg: rgba(15, 23, 42, 0.8);
+      --card-border: rgba(100, 116, 139, 0.3);
+      --text-primary: #f1f5f9;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      -webkit-tap-highlight-color: transparent;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-darker) 100%);
+      min-height: 100vh;
+      color: var(--text-primary);
+      display: flex;
+      flex-direction: column;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 50% 0%, rgba(6, 182, 212, 0.08) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    header {
+      background: rgba(15, 23, 42, 0.95);
+      padding: 1.2rem;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(20px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.875rem;
+      text-decoration: none;
+      color: var(--text-primary);
+    }
+
+    .brand:hover {
+      opacity: 0.9;
+    }
+
+    .nav-btn {
+      background: none;
+      border: none;
+      color: var(--accent);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 1rem;
+      transition: color 0.3s ease;
+      padding: 0.5rem 1rem;
+    }
+
+    .nav-btn:hover {
+      color: var(--primary);
+    }
+
+    .content {
+      flex: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+      width: 100%;
+    }
+
+    .content h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .content .effective-date {
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+      font-size: 1rem;
+    }
+
+    .content h2 {
+      font-size: 1.5rem;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      color: var(--accent);
+    }
+
+    .content p, .content li {
+      line-height: 1.8;
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+      font-size: 1.05rem;
+    }
+
+    .content ul, .content ol {
+      margin-left: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .content li {
+      margin-bottom: 0.75rem;
+    }
+
+    .content strong {
+      color: var(--primary);
+    }
+
+    footer {
+      background: rgba(15, 23, 42, 0.95);
+      border-top: 1px solid var(--card-border);
+      padding: 2rem 1.5rem;
+      text-align: center;
+      color: var(--text-muted);
+      margin-top: auto;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    footer a:hover {
+      color: var(--primary);
+    }
+
+    @media (max-width: 768px) {
+      .content {
+        padding: 1.5rem 1rem;
+      }
+
+      .content h1 {
+        font-size: 1.8rem;
+      }
+
+      .content h2 {
+        font-size: 1.3rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/home.html" class="brand">
+      <img src="/uploads/logo.png" alt="Check My Paper logo" loading="lazy" style="height: 44px; width: auto; border-radius: 10px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);">
+      <span style="font-weight: 700; font-size: 1.25rem;">CheckMyPaper</span>
+    </a>
+    <button class="nav-btn" onclick="window.location.href = '/home.html'">← Back to Home</button>
+  </header>
+
+  <div class="content">
+    <h1>Terms of Service</h1>
+    <p class="effective-date">Effective Date: 21 December 2025</p>
+
+    <p>Welcome to CheckMyPaper.net. By accessing, purchasing, or using CheckMyPaper.net, including its website, services, servers, credits, or reports, you agree to be legally bound by the following Terms of Service. If you do not agree with any part of these terms, you must not use CheckMyPaper.net or any related services.</p>
+
+    <h2>1. Terms of Use</h2>
+    <p>By accessing CheckMyPaper.net, you confirm that you are legally capable of entering into this agreement and that you agree to comply with all applicable laws and regulations. You are solely responsible for compliance with any local, institutional, or jurisdictional rules. All materials, systems, and content on CheckMyPaper.net are protected by applicable copyright and trademark laws.</p>
+
+    <h2>2. Use License</h2>
+    <p>Permission is granted to access CheckMyPaper.net services, reports, servers, and user panel through purchased credits for personal, non-commercial use only. This permission constitutes a license, not a transfer of ownership. You may not modify, reproduce, copy, share, resell, reverse engineer, mirror, or provide access to any part of CheckMyPaper.net to third parties. Violation of these terms may result in immediate termination without notice.</p>
+
+    <h2>3. Disclaimer</h2>
+    <p>All services, servers, systems, and reports provided by CheckMyPaper.net are provided "as is" and "as available". CheckMyPaper.net does not guarantee the accuracy, completeness, reliability, or correctness of any similarity, plagiarism, or AI detection report. Reports are provided strictly for reference purposes only.</p>
+    <p>CheckMyPaper.net is not affiliated with, endorsed by, or associated with Turnitin® or any of its subsidiaries. Any reference to Turnitin is for informational purposes only. All trademarks remain the property of their respective owners.</p>
+
+    <h2>4. Limitation of Liability</h2>
+    <p>To the maximum extent permitted by law, CheckMyPaper.net shall not be liable for any direct, indirect, incidental, consequential, or special damages, including but not limited to loss of data, loss of reports, loss of credits, academic penalties, reputational damage, or service interruption arising from the use of or inability to use CheckMyPaper.net.</p>
+
+    <h2>5. Credits, Services, and Termination</h2>
+    <p>All credits purchased on CheckMyPaper.net are non-refundable, non-transferable, and have no cash value. CheckMyPaper.net reserves the right to modify, suspend, restrict, or permanently discontinue any service, server, system, feature, or credit balance at any time, with or without prior notice. In such events, CheckMyPaper.net is not obligated to honor unused credits or provide refunds.</p>
+
+    <h2>6. External Links</h2>
+    <p>CheckMyPaper.net may contain links to third-party websites. CheckMyPaper.net is not responsible for the content, accuracy, or practices of any external websites. Accessing third-party sites is done at the user's own risk.</p>
+
+    <h2>7. Modifications to Terms</h2>
+    <p>CheckMyPaper.net may revise or update these Terms of Service at any time without prior notice. Continued use of CheckMyPaper.net constitutes acceptance of the revised terms.</p>
+
+    <h2>8. Governing Law</h2>
+    <p>These Terms of Service shall be governed by and construed in accordance with the applicable laws of the operating jurisdiction of CheckMyPaper.net, without regard to conflict of law principles.</p>
+
+    <h2>9. Acceptance of Terms</h2>
+    <p>By accessing or using CheckMyPaper.net, you acknowledge that you have read, understood, and agreed to these Terms of Service in full. If you do not agree, you must immediately discontinue use of CheckMyPaper.net.</p>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 Check My Paper. All rights reserved. | <a href="/terms.html">Terms of Service</a></p>
+  </footer>
+</body>
+</html>

@@ -213,6 +213,7 @@
       <button class="tab-btn active" data-tab="browse">📚 Services</button>
       <button class="tab-btn" data-tab="redeem">💎 Redeem Credits</button>
       <button class="tab-btn" data-tab="orders">📋 Orders</button>
+      <button class="tab-btn" data-tab="settings">⚙️ Settings</button>
     </div>
 
     <!-- Browse Services Tab -->
@@ -272,6 +273,41 @@
         Track your service orders and download responses from admins.
       </p>
       <div id="userOrdersContainer"></div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div id="settings" class="tab-content">
+      <h2>Account Settings</h2>
+      <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem;">
+        Manage your account security and preferences.
+      </p>
+      
+      <div style="max-width: 600px;">
+        <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.6) 100%); border: 1px solid rgba(100, 116, 139, 0.3); border-radius: 16px; padding: 2.5rem;">
+          <h3 style="color: var(--text-primary); margin-top: 0; margin-bottom: 1.5rem; font-size: 1.3rem;">🔐 Change Password</h3>
+          
+          <div id="passwordMessage" style="display: none; padding: 1rem; border-radius: 10px; margin-bottom: 1.5rem; font-weight: 600; text-align: center;"></div>
+          
+          <form id="changePasswordForm" style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <div>
+              <label for="currentPassword" style="color: var(--text-primary); font-weight: 600; margin-bottom: 0.75rem; display: block;">Current Password</label>
+              <input type="password" id="currentPassword" required style="background: rgba(99, 102, 241, 0.1); color: var(--text-primary); border: 1px solid var(--card-border); padding: 1rem; border-radius: 8px; width: 100%; font-size: 1rem; transition: all 0.3s ease;" placeholder="Enter your current password">
+            </div>
+
+            <div>
+              <label for="newPassword" style="color: var(--text-primary); font-weight: 600; margin-bottom: 0.75rem; display: block;">New Password</label>
+              <input type="password" id="newPassword" required style="background: rgba(99, 102, 241, 0.1); color: var(--text-primary); border: 1px solid var(--card-border); padding: 1rem; border-radius: 8px; width: 100%; font-size: 1rem; transition: all 0.3s ease;" placeholder="Enter your new password (minimum 6 characters)">
+            </div>
+
+            <div>
+              <label for="confirmPassword" style="color: var(--text-primary); font-weight: 600; margin-bottom: 0.75rem; display: block;">Confirm New Password</label>
+              <input type="password" id="confirmPassword" required style="background: rgba(99, 102, 241, 0.1); color: var(--text-primary); border: 1px solid var(--card-border); padding: 1rem; border-radius: 8px; width: 100%; font-size: 1rem; transition: all 0.3s ease;" placeholder="Confirm your new password">
+            </div>
+
+            <button type="submit" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); color: white; border: none; padding: 1rem; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1rem; transition: all 0.3s ease; margin-top: 1rem;">Update Password</button>
+          </form>
+        </div>
+      </div>
     </div>
   </div>
 
