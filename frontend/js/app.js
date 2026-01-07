@@ -329,8 +329,9 @@ function displayUserOrders(orders) {
     
     // User file link
     const userFileUrl = order.userFile && (order.userFile.url || order.userFile.secure_url || order.userFile.path);
+    const userFileName = order.userFile && order.userFile.filename ? order.userFile.filename : 'No file';
     const userFileLink = userFileUrl
-      ? `<a href="${userFileUrl}" target="_blank" rel="noopener" download style="color: #ffffff; text-decoration: none; font-weight: 600;">📥 Download Your File</a>`
+      ? `<a href="${userFileUrl}" target="_blank" rel="noopener" download style="color: #ffffff; text-decoration: none; font-weight: 600;">📥 User File</a>`
       : '<span style="color: #999;">No file</span>';
     
     // AI Report link
@@ -357,9 +358,12 @@ function displayUserOrders(orders) {
         </div>
 
         <!-- Price and Date -->
-        <div style="display: flex; justify-content: space-between; color: #6b7280; font-size: 0.9rem; margin-bottom: 1.2rem; padding-bottom: 1rem; border-bottom: 1px solid #e5e7eb;">
+        <div style="display: flex; justify-content: space-between; align-items: center; color: #6b7280; font-size: 0.9rem; margin-bottom: 1.2rem; padding-bottom: 1rem; border-bottom: 1px solid #e5e7eb;">
           <span><strong>${order.checksUsed}</strong> Credits</span>
-          <span>${date} • ${time}</span>
+          <div style="text-align: right;">
+            <div>${date} • ${time}</div>
+            ${order.userFile ? `<div style="font-size: 0.85rem; color: #6366f1; font-weight: 500; margin-top: 0.3rem; word-break: break-word; word-wrap: break-word; overflow-wrap: break-word;">📄 ${userFileName}</div>` : ''}
+          </div>
         </div>
 
         <!-- Files Section -->

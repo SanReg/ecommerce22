@@ -269,6 +269,7 @@ function displayAllOrders(orders) {
     
     // File URLs
     const userFileUrl = order.userFile && (order.userFile.url || order.userFile.secure_url || order.userFile.path);
+    const userFileName = order.userFile && order.userFile.filename ? order.userFile.filename : 'No file';
     const aiReportUrl = order.adminFiles && order.adminFiles.aiReport && (order.adminFiles.aiReport.url || order.adminFiles.aiReport.secure_url);
     const similarityUrl = order.adminFiles && order.adminFiles.similarityReport && (order.adminFiles.similarityReport.url || order.adminFiles.similarityReport.secure_url);
 
@@ -289,6 +290,7 @@ function displayAllOrders(orders) {
           <p style="margin: 0.3rem 0 0 0; color: #666; font-size: 0.85rem;"><strong>Email:</strong> ${userEmail}</p>
           <p style="margin: 0.3rem 0 0 0; color: #666; font-size: 0.85rem;"><strong>Credits:</strong> ${order.checksUsed}</p>
           <p style="margin: 0.3rem 0 0 0; color: #666; font-size: 0.85rem;"><strong>Date & Time:</strong> ${date} at ${time}</p>
+          ${order.userFile ? `<p style="margin: 0.3rem 0 0 0; color: #6366f1; font-size: 0.85rem; font-weight: 500;"><strong>📄 User File:</strong> <span style="word-break: break-word; word-wrap: break-word; overflow-wrap: break-word;">${userFileName}</span></p>` : ''}
         </div>
 
         <!-- Files Status -->
