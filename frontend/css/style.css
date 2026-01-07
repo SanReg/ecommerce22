@@ -7,6 +7,12 @@
   user-select: none;
 }
 
+.selectable-text,
+.selectable-text * {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 :root {
   --primary: #6366f1;
   --primary-dark: #4f46e5;

@@ -1046,70 +1046,11 @@
     <h3 class="section-title">💳 Credit Plans (NEVER EXPIRES!)</h3>
     <p class="section-sub">Choose your checks, keep them forever, and redeem anytime.</p>
 
-    <div class="grid">
-      <div class="card">
-        <span class="pill">Credit Plan</span>
-        <h3>1 Check</h3>
-        <div class="price">1 Check → $4</div>
-        <ul class="list">
-          <li>✓ Perfect for quick single submissions</li>
-        </ul>
-      </div>
-      <div class="card">
-        <span class="pill">Credit Plan</span>
-        <h3>5 Checks</h3>
-        <div class="price">5 Checks → $15</div>
-        <ul class="list">
-          <li>✓ Better value for weekly needs</li>
-        </ul>
-      </div>
-      <div class="card">
-        <span class="pill">Credit Plan</span>
-        <h3>10 Checks</h3>
-        <div class="price">10 Checks → $30</div>
-        <ul class="list">
-          <li>✓ Ideal for frequent submissions</li>
-        </ul>
-      </div>
-      <div class="card">
-        <span class="pill">Credit Plan</span>
-        <h3>20 Checks</h3>
-        <div class="price">20 Checks → $60</div>
-        <ul class="list">
-          <li>✓ Great for teams or heavy weeks</li>
-        </ul>
-      </div>
-      <div class="card">
-        <span class="pill">Credit Plan</span>
-        <h3>50 Checks</h3>
-        <div class="price">50 Checks → $120</div>
-
-        <ul class="list">
-          <li>✓ Best value for heavy usage</li>
-        </ul>
-      </div>
-    </div>
+    <div id="creditPlans" class="grid"></div>
 
     <h3 class="section-title">🔄 Unlimited Plans (Active)</h3>
     <p class="section-sub">Consistent daily checks during your plan window.</p>
-    <div class="grid">
-      <div class="card">
-        <span class="pill">Active</span>
-        <h3>Unlimited 1 Week</h3>
-        <div class="price">$30</div>
-        <ul class="list">
-          <li>✓ 3 checks per day</li>
-        </ul>
-      </div>
-      <div class="card">
-        <span class="pill">Active</span>
-        <h3>Unlimited 1 Month</h3>
-        <div class="price">$120</div>
-        <ul class="list">
-          <li>✓ 10 checks per day</li>
-        </ul>
-      </div>
-    </div>
+    <div id="unlimitedPlans" class="grid"></div>
 
     <h3 class="section-title">Payment Methods</h3>
     <p class="section-sub">PayPal or Crypto — pick what’s easiest for you.</p>
@@ -1388,6 +1329,8 @@
 
     const navMenu = document.getElementById('navMenu');
     const ctaButtons = document.getElementById('ctaButtons');
+    const creditPlansEl = document.getElementById('creditPlans');
+    const unlimitedPlansEl = document.getElementById('unlimitedPlans');
 
     // Batch DOM updates
     if (token && currentUser) {
@@ -1443,8 +1386,72 @@
       }
     }
 
-    // Load total checks on page load
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function renderPackageSection(container, items, emptyText) {
+      if (!container) return;
+      if (!items || items.length === 0) {
+        container.innerHTML = `<div class="card"><ul class="list"><li>${emptyText}</li></ul></div>`;
+        return;
+      }
+
+      container.innerHTML = items.map(pkg => {
+        const title = escapeHtml(pkg.label);
+        const price = pkg.isUnlimited
+          ? `$${pkg.priceUsd}`
+          : `${pkg.checks === 1 ? '1 Check' : `${pkg.checks} Checks`} → $${pkg.priceUsd}`;
+        const lineOne = pkg.isUnlimited ? `${pkg.checks} checks per day` : 'Credits never expire';
+        const lineTwo = pkg.isUnlimited ? 'Daily limit resets every 24h' : 'Redeem anytime you need';
+        const pill = pkg.isUnlimited ? 'Active' : 'Credit Plan';
+
+        return `
+          <div class="card">
+            <span class="pill">${pill}</span>
+            <h3>${title}</h3>
+            <div class="price">${price}</div>
+            <ul class="list">
+              <li>✓ ${lineOne}</li>
+              <li>✓ ${lineTwo}</li>
+            </ul>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function loadPackagesLanding() {
+      if (!creditPlansEl && !unlimitedPlansEl) return;
+
+      const loadingCard = '<div class="card"><ul class="list"><li>Loading packages...</li></ul></div>';
+      if (creditPlansEl) creditPlansEl.innerHTML = loadingCard;
+      if (unlimitedPlansEl) unlimitedPlansEl.innerHTML = loadingCard;
+
+      try {
+        const response = await fetch('/api/packages');
+        if (!response.ok) throw new Error('Failed to load packages');
+        const data = await response.json();
+
+        const credit = data.filter(pkg => !pkg.isUnlimited);
+        const unlimited = data.filter(pkg => pkg.isUnlimited);
+
+        renderPackageSection(creditPlansEl, credit, 'No credit plans available right now.');
+        renderPackageSection(unlimitedPlansEl, unlimited, 'Unlimited plans are offline right now.');
+      } catch (error) {
+        console.error('Error loading packages:', error);
+        if (creditPlansEl) creditPlansEl.innerHTML = '<div class="card"><ul class="list"><li>Could not load plans. Please refresh.</li></ul></div>';
+        if (unlimitedPlansEl) unlimitedPlansEl.innerHTML = '<div class="card"><ul class="list"><li>Could not load plans. Please refresh.</li></ul></div>';
+      }
+    }
+
+    // Load total checks and live packages on page load
     fetchTotalChecks();
+    loadPackagesLanding();
 
     // Improve scroll performance
     let ticking = false;

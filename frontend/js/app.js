@@ -4,6 +4,53 @@ let unlimitedInfo = null;
 let books = [];
 const DISCORD_INVITE_URL = 'https://discord.gg/7TrBn3wBf5'; // TODO: Replace with your actual invite link
 
+// Buy credits config - loaded from API
+let CHECK_PACKAGES = [
+  { id: 'pack-1', label: '1 Check', checks: 1, priceUsd: 4 },
+  { id: 'pack-5', label: '5 Checks', checks: 5, priceUsd: 15 },
+  { id: 'pack-10', label: '10 Checks', checks: 10, priceUsd: 30 },
+  { id: 'pack-20', label: '20 Checks', checks: 20, priceUsd: 50 },
+  { id: 'pack-50', label: '50 Checks', checks: 50, priceUsd: 120 },
+  { id: 'pack-100', label: '100 Checks', checks: 100, priceUsd: 220 },
+  { id: 'unlimited-1w', label: 'Unlimited 1 Week (3 checks/day)', checks: 3, priceUsd: 30, isUnlimited: true },
+  { id: 'unlimited-1m', label: 'Unlimited 1 Month (10 checks/day)', checks: 10, priceUsd: 120, isUnlimited: true }
+];
+
+const PAYMENT_METHODS = {
+  paypal: {
+    label: 'PayPal (Friends & Family)',
+    summary: 'Send using Friends & Family. Do not add any note.',
+    details: `
+    <p style="margin: 0 0 0.5rem 0; user-select: text;">PayPal link: <a href="https://paypal.me/HooRaa" target="_blank" rel="noopener" style="color: var(--primary); font-weight: 700; user-select: text;">paypal.me/HooRaa</a></p>
+    <p style="margin: 0 0 0.5rem 0; user-select: text;">Send via <strong>Friends & Family</strong> only. Do not write any note/reference.</p>
+    <p style="margin: 0; color: #ef4444; font-weight: 600; user-select: text;">If Friends & Family is not available, tell us first. Do NOT pay as goods/services.</p>`
+  },
+  crypto: {
+    label: 'Crypto',
+    summary: 'USDT (TRC20), Bitcoin, or Binance Pay. Network must match.',
+    options: [
+      { id: 'usdt-trc20', label: 'USDT (TRC20)', address: 'TYp3UJWq1RkAMFJwHw3Ni61gCVHfMydpbc' },
+      { id: 'btc', label: 'Bitcoin', address: 'bc1qt882udhrzpym7nss5trzq4f08wdn2ym2ajyamt' },
+      { id: 'binance', label: 'Binance Pay', address: '584815333' }
+    ],
+    details: `
+    <p style="margin: 0 0 0.5rem 0; user-select: text;">Select network above. Network must match the wallet.</p>
+    <p style="margin: 0 0 0.5rem 0; user-select: text;">Binance ID: <strong style="user-select: text;">584815333</strong></p>
+    <p style="margin: 0; color: #ef4444; font-weight: 600; user-select: text;">Crypto payments are irreversible. Sending to the wrong address or network will result in loss of funds.</p>`
+  },
+  card: {
+    label: 'Debit/Credit (Binance Gift Card)',
+    summary: 'Buy a Binance USDT gift card and send the redeem code.',
+    details: `
+    <p style="margin: 0 0 0.5rem 0; user-select: text;">Purchase a Binance gift card (USDT). Example vendors:</p>
+    <ul style="margin: 0 0 0.75rem 0; padding-left: 1.1rem; user-select: text;">
+      <li style="user-select: text;"><a href="https://www.eneba.com/binance-binance-gift-card-usdt-3-usd-key-global" target="_blank" rel="noopener" style="color: var(--primary); user-select: text;">Eneba</a></li>
+      <li style="user-select: text;"><a href="https://driffle.com/binance-usdt-3-usd-gift-card-digital-code-p9886854" target="_blank" rel="noopener" style="color: var(--primary); user-select: text;">Driffle</a></li>
+    </ul>
+    <p style="margin: 0; user-select: text;">After purchase, create a ticket and share the redeem code. Admin will verify and send a credit redeem code back.</p>`
+  }
+};
+
 // Check if user is logged in
 if (!token) {
   window.location.href = 'login.html';
@@ -13,9 +60,12 @@ if (!token) {
 document.addEventListener('DOMContentLoaded', () => {
   displayUserInfo();
   loadBooks();
+  loadPackages();
   setupTabButtons();
   checkServiceStatus();
   setupPasswordChangeForm();
+  setupBuyFlow();
+  loadTickets();
 });
 
 function setupTabButtons() {
@@ -404,6 +454,358 @@ function displayUserOrders(orders) {
 
   html += '</div>';
   container.innerHTML = html;
+}
+
+// Load packages from API
+async function loadPackages() {
+  try {
+    const response = await fetch('/api/packages');
+    const data = await response.json();
+    if (response.ok && data.length > 0) {
+      CHECK_PACKAGES = data;
+      if (selectedPackageId && !CHECK_PACKAGES.find(p => p.id === selectedPackageId)) {
+        selectedPackageId = CHECK_PACKAGES[0].id;
+      }
+      renderPackageCards();
+    }
+  } catch (error) {
+    console.error('Error loading packages:', error);
+  }
+}
+
+// --- Buy Credits: ticket workflow ---
+let selectedPackageId = null;
+let selectedPaymentMethod = 'paypal';
+let selectedPaymentOption = '';
+
+function setupBuyFlow() {
+  renderPackageCards();
+  renderPaymentMethods();
+  updatePaymentDetails();
+
+  const createBtn = document.getElementById('createTicketBtn');
+  if (createBtn) {
+    createBtn.addEventListener('click', createTicket);
+  }
+
+  const refreshBtn = document.getElementById('refreshTicketsBtn');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', loadTickets);
+  }
+}
+
+function renderPackageCards() {
+  const container = document.getElementById('buyPackages');
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (!CHECK_PACKAGES || CHECK_PACKAGES.length === 0) {
+    container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 1rem;">Loading packages...</p>';
+    return;
+  }
+
+  // Initialize selectedPackageId if not set
+  if (!selectedPackageId || !CHECK_PACKAGES.find(p => p.id === selectedPackageId)) {
+    selectedPackageId = CHECK_PACKAGES[0].id;
+  }
+
+  CHECK_PACKAGES.forEach(pkg => {
+    const card = document.createElement('label');
+    card.style.cssText = `display: flex; justify-content: space-between; align-items: center; padding: 0.9rem 1rem; border: 2px solid ${pkg.id === selectedPackageId ? '#10b981' : '#e5e7eb'}; border-radius: 10px; cursor: pointer; gap: 1rem; background: ${pkg.id === selectedPackageId ? '#f0fdf4' : '#fff'}; box-shadow: 0 4px 12px rgba(0,0,0,0.04); transition: all 0.2s ease; user-select: none;`;
+
+    card.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1;">
+        <input type="radio" name="package" value="${pkg.id}" ${pkg.id === selectedPackageId ? 'checked' : ''} style="accent-color: #10b981; width: 20px; height: 20px; min-width: 20px; cursor: pointer;">
+        <div style="user-select: text;">
+          <div style="font-weight: 700; color: #1f2937; user-select: text;">${pkg.label}</div>
+          <div style="color: #475569; font-size: 0.9rem; font-weight: 600; user-select: text;">USD $${pkg.priceUsd.toFixed(2)}</div>
+        </div>
+      </div>
+      <span style="background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%); color: white; padding: 0.35rem 0.65rem; border-radius: 8px; font-weight: 700; font-size: 0.9rem; user-select: text;">${pkg.checks} ${pkg.isUnlimited ? 'daily' : 'credits'}</span>
+    `;
+
+    card.querySelector('input').addEventListener('change', () => {
+      selectedPackageId = pkg.id;
+      renderPackageCards();
+    });
+
+    container.appendChild(card);
+  });
+}
+
+function renderPaymentMethods() {
+  const container = document.getElementById('paymentMethods');
+  if (!container) return;
+  container.innerHTML = '';
+
+  Object.entries(PAYMENT_METHODS).forEach(([key, data]) => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-secondary';
+    btn.style.cssText = `width: 100%; text-align: left; display: block; padding: 0.9rem 1rem; border-radius: 10px; border: 2px solid ${selectedPaymentMethod === key ? '#10b981' : '#e5e7eb'}; background: ${selectedPaymentMethod === key ? '#f0fdf4' : '#fff'}; transition: all 0.2s ease;`;
+    btn.innerHTML = `<div style="display:flex; justify-content: space-between; align-items: center; gap: 0.5rem;"><div style="user-select: text;"><strong style="color: #1f2937; user-select: text;">${data.label}</strong><div style="color: #475569; font-size: 0.9rem; margin-top: 0.15rem; font-weight: 500; user-select: text;">${data.summary}</div></div><span style="color: ${selectedPaymentMethod === key ? '#10b981' : '#cbd5e1'}; font-size: 1.2rem;">●</span></div>`;
+
+    btn.addEventListener('click', () => {
+      selectedPaymentMethod = key;
+      if (key !== 'crypto') {
+        selectedPaymentOption = '';
+        document.getElementById('paymentOptions').style.display = 'none';
+      } else {
+        // Ensure first option is selected when switching to crypto
+        if (!selectedPaymentOption) {
+          selectedPaymentOption = PAYMENT_METHODS.crypto.options[0].id;
+        }
+        renderPaymentOptions('crypto');
+      }
+      renderPaymentMethods();
+      updatePaymentDetails();
+    });
+
+    container.appendChild(btn);
+  });
+}
+
+function renderPaymentOptions(methodKey) {
+  const wrapper = document.getElementById('paymentOptions');
+  if (!wrapper) return;
+  if (methodKey !== 'crypto') {
+    wrapper.style.display = 'none';
+    return;
+  }
+
+  const crypto = PAYMENT_METHODS.crypto;
+  wrapper.style.display = 'block';
+  
+  // Default to first option if none selected
+  if (!selectedPaymentOption) {
+    selectedPaymentOption = crypto.options[0].id;
+  }
+  
+  wrapper.innerHTML = '<p style="margin: 0 0 0.5rem 0; color: var(--text-primary); font-weight: 600; user-select: text;">Choose network (Required)</p>';
+
+  crypto.options.forEach(opt => {
+    const optEl = document.createElement('label');
+    optEl.style.cssText = 'display: flex; align-items: center; gap: 0.6rem; padding: 0.45rem 0; cursor: pointer; user-select: text;';
+    optEl.innerHTML = `<input type="radio" name="paymentOption" value="${opt.id}" ${selectedPaymentOption === opt.id ? 'checked' : ''} style="accent-color: #10b981; width: 18px; height: 18px; cursor: pointer;"> <span style="color: var(--text-secondary); user-select: text;">${opt.label}</span>`;
+    optEl.querySelector('input').addEventListener('change', () => {
+      selectedPaymentOption = opt.id;
+      updatePaymentDetails();
+    });
+    wrapper.appendChild(optEl);
+  });
+}
+
+function updatePaymentDetails() {
+  const detailsDiv = document.getElementById('paymentDetails');
+  if (!detailsDiv) return;
+
+  const method = PAYMENT_METHODS[selectedPaymentMethod];
+  if (!method) {
+    detailsDiv.innerHTML = '<p style="user-select: text;">Select a payment method to view instructions.</p>';
+    return;
+  }
+
+  if (selectedPaymentMethod === 'crypto') {
+    const opt = (method.options || []).find(o => o.id === selectedPaymentOption) || method.options[0];
+    selectedPaymentOption = opt.id;
+    detailsDiv.innerHTML = `
+      <p style="margin: 0 0 0.4rem 0; font-weight: 700; color: var(--text-primary); user-select: text;">${opt.label} address</p>
+      <p style="margin: 0 0 0.6rem 0; word-break: break-all; font-family: monospace; background: rgba(255,255,255,0.6); padding: 0.6rem; border-radius: 8px; user-select: text;">${opt.address}</p>
+      <div style="user-select: text;">${method.details}</div>
+    `;
+    return;
+  }
+
+  detailsDiv.innerHTML = `<div style="user-select: text;">${method.details}</div>`;
+}
+
+async function createTicket() {
+  const pkg = CHECK_PACKAGES.find(p => p.id === selectedPackageId);
+  if (!pkg) {
+    showMessage('Please select a package', 'error');
+    return;
+  }
+
+  if (!selectedPaymentMethod) {
+    showMessage('Please choose a payment method', 'error');
+    return;
+  }
+
+  if (selectedPaymentMethod === 'crypto' && !selectedPaymentOption) {
+    showMessage('Please choose a crypto network', 'error');
+    return;
+  }
+
+  // Require screenshot before creating ticket
+  const fileInput = document.getElementById('ticketProofUpload');
+  if (!fileInput || !fileInput.files || !fileInput.files.length) {
+    showMessage('Please upload payment screenshot before creating ticket', 'error');
+    return;
+  }
+
+  const note = document.getElementById('ticketNote')?.value || '';
+
+  // Show confirmation alert
+  const confirmMsg = `Creating ticket for ${pkg.label} ($${pkg.priceUsd}) via ${selectedPaymentMethod.toUpperCase()}${selectedPaymentOption ? ' - ' + selectedPaymentOption : ''}. Please ensure payment is completed before uploading screenshot.`;
+  if (!confirm(confirmMsg)) {
+    return;
+  }
+
+  // Show progress
+  const progressDiv = document.getElementById('ticketUploadProgress');
+  const progressBar = document.getElementById('ticketUploadProgressBar');
+  if (progressDiv && progressBar) {
+    progressDiv.style.display = 'block';
+    progressBar.style.width = '10%';
+  }
+
+  try {
+    // Create ticket first
+    if (progressBar) progressBar.style.width = '30%';
+    const response = await fetch('/api/tickets', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        packageLabel: pkg.label,
+        checksRequested: pkg.checks,
+        priceUsd: pkg.priceUsd,
+        paymentMethod: selectedPaymentMethod,
+        paymentOption: selectedPaymentOption,
+        userNote: note
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      showMessage(data.message || 'Could not create ticket', 'error');
+      return;
+    }
+
+    // Upload screenshot immediately
+    if (progressBar) progressBar.style.width = '60%';
+    const ticketId = data.ticket._id;
+    const formData = new FormData();
+    formData.append('proof', fileInput.files[0]);
+
+    const uploadResponse = await fetch(`/api/tickets/${ticketId}/proof`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData
+    });
+
+    if (progressBar) progressBar.style.width = '90%';
+    const uploadData = await uploadResponse.json();
+    if (uploadResponse.ok) {
+      if (progressBar) progressBar.style.width = '100%';
+      alert('✅ Success! Ticket created with payment proof. Admin will review your payment and send a redeem code in the remarks section.');
+      showMessage('Ticket created with payment proof. Admin will review and send redeem code.', 'success');
+      fileInput.value = '';
+      document.getElementById('ticketNote').value = '';
+      if (progressDiv) progressDiv.style.display = 'none';
+      loadTickets();
+    } else {
+      if (progressDiv) progressDiv.style.display = 'none';
+      alert('⚠️ Warning: Ticket created but screenshot upload failed. Please try uploading again from your ticket.');
+      showMessage('Ticket created but screenshot upload failed: ' + uploadData.message, 'error');
+      loadTickets();
+    }
+  } catch (error) {
+    if (progressDiv) progressDiv.style.display = 'none';
+    alert('❌ Error: ' + error.message);
+    showMessage('Error creating ticket: ' + error.message, 'error');
+  }
+}
+
+async function loadTickets() {
+  try {
+    const response = await fetch('/api/tickets/my', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await response.json();
+    if (response.ok) {
+      displayTickets(Array.isArray(data) ? data : []);
+    } else {
+      showMessage(data.message || 'Could not load tickets', 'error');
+    }
+  } catch (error) {
+    showMessage('Error loading tickets: ' + error.message, 'error');
+  }
+}
+
+function displayTickets(tickets) {
+  const container = document.getElementById('ticketsContainer');
+  if (!container) return;
+
+  if (!tickets.length) {
+    container.innerHTML = '<div class="empty-state" style="user-select: text;"><h2 style="user-select: text;">No tickets yet</h2><p style="user-select: text;">Choose a package above to create your first ticket.</p></div>';
+    return;
+  }
+
+  const statusColors = {
+    pending: '#f59e0b',
+    submitted: '#3b82f6',
+    completed: '#10b981',
+    failed: '#ef4444'
+  };
+
+  let html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem;">';
+
+  tickets.forEach(ticket => {
+    const statusColor = statusColors[ticket.status] || '#64748b';
+    // Display 'Processing' instead of 'submitted'
+    const displayStatus = ticket.status === 'submitted' ? 'Processing' : ticket.status;
+    const proofUrl = ticket.paymentProof && (ticket.paymentProof.url || ticket.paymentProof.secure_url);
+    const optLabel = ticket.paymentOption ? ` • ${ticket.paymentOption}` : '';
+
+    html += `
+      <div style="background: white; border: 2px solid ${ticket.status === 'completed' ? '#10b981' : ticket.status === 'failed' ? '#ef4444' : '#e5e7eb'}; border-radius: 12px; padding: 1.25rem; box-shadow: 0 6px 16px rgba(0,0,0,0.08); transition: all 0.2s ease; cursor: default;" onmouseenter="this.style.boxShadow='0 8px 24px rgba(0,0,0,0.12)'" onmouseleave="this.style.boxShadow='0 6px 16px rgba(0,0,0,0.08)'">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
+          <div style="user-select: text;">
+            <div style="font-weight: 700; color: #1f2937; font-size: 1.05rem; user-select: text;">${ticket.packageLabel}</div>
+            <div style="color: #475569; font-size: 0.9rem; font-weight: 600; margin-top: 0.2rem; user-select: text;">${ticket.checksRequested} credits • $${Number(ticket.priceUsd || 0).toFixed(2)}</div>
+          </div>
+          <span style="padding: 0.4rem 0.75rem; border-radius: 999px; background: ${statusColor}; color: white; font-weight: 700; font-size: 0.85rem; text-transform: capitalize; user-select: text;">${displayStatus}</span>
+        </div>
+        <div style="background: #f9fafb; padding: 0.75rem; border-radius: 8px; margin-bottom: 0.75rem;">
+          <p style="margin: 0 0 0.4rem 0; color: #334155; font-size: 0.9rem; font-weight: 500; user-select: text;"><strong>Payment:</strong> ${ticket.paymentMethod}${optLabel}</p>
+          ${ticket.userNote ? `<p style="margin: 0; color: #475569; font-size: 0.9rem; user-select: text;"><strong>Note:</strong> ${ticket.userNote}</p>` : ''}
+        </div>
+        ${ticket.adminRemarks ? `<div style="margin: 0 0 0.75rem 0; color: #0f172a; font-weight: 600; padding: 0.75rem; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 6px;"><strong style="user-select: text;">Admin Response:</strong><br><span style="user-select: text; font-weight: 500; margin-top: 0.25rem; display: block;">${ticket.adminRemarks}</span></div>` : ''}
+        ${proofUrl ? `<a href="${proofUrl}" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 0.4rem; color: #6366f1; font-weight: 700; text-decoration: underline; font-size: 0.95rem; user-select: text;">📎 View Payment Proof</a>` : '<p style="margin: 0 0 0.75rem 0; color: #ef4444; font-weight: 700; font-size: 0.95rem; user-select: text;">⚠️ Payment proof required</p>'}
+      </div>
+    `;
+  });
+
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+async function uploadTicketProof(ticketId, inputEl) {
+  if (!inputEl.files || !inputEl.files.length) return;
+  const file = inputEl.files[0];
+  const formData = new FormData();
+  formData.append('proof', file);
+
+  try {
+    const response = await fetch(`/api/tickets/${ticketId}/proof`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData
+    });
+    const data = await response.json();
+    if (response.ok) {
+      showMessage('Payment proof uploaded. Awaiting admin review.', 'success');
+      loadTickets();
+    } else {
+      showMessage(data.message || 'Could not upload proof', 'error');
+    }
+  } catch (error) {
+    showMessage('Error uploading proof: ' + error.message, 'error');
+  } finally {
+    inputEl.value = '';
+  }
 }
 
 

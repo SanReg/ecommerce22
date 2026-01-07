@@ -3,6 +3,9 @@ const Order = require('../models/Order');
 const User = require('../models/User');
 const Book = require('../models/Book');
 const RedemptionCode = require('../models/RedemptionCode');
+const Ticket = require('../models/Ticket');
+const Package = require('../models/Package');
+const ServiceStatus = require('../models/ServiceStatus');
 const { authMiddleware, adminMiddleware } = require('../middleware/auth');
 const { uploadBuffer, cloudinary } = require('../utils/cloudinary');
 const bcrypt = require('bcryptjs');
@@ -300,6 +303,43 @@ router.put('/users/:id/password', authMiddleware, adminMiddleware, async (req, r
     res.json({ message: 'Password updated successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+// Export current MongoDB data (JSON download)
+router.get('/export', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const timestamp = new Date().toISOString();
+    const safeTs = timestamp.replace(/[:]/g, '-');
+
+    const [users, orders, books, codes, tickets, packages, serviceStatus] = await Promise.all([
+      User.find().lean(),
+      Order.find().lean(),
+      Book.find().lean(),
+      RedemptionCode.find().lean(),
+      Ticket.find().lean(),
+      Package.find().lean(),
+      ServiceStatus.find().lean()
+    ]);
+
+    const payload = {
+      generatedAt: timestamp,
+      collections: {
+        users,
+        orders,
+        books,
+        redemptionCodes: codes,
+        tickets,
+        packages,
+        serviceStatus
+      }
+    };
+
+    res.setHeader('Content-Disposition', `attachment; filename="mongo-backup-${safeTs}.json"`);
+    res.type('application/json');
+    res.send(JSON.stringify(payload, null, 2));
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to export data', error: error.message });
   }
 });
 

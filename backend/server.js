@@ -32,6 +32,8 @@ app.use('/api/checks', require('./routes/checks'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/tickets', require('./routes/tickets'));
+app.use('/api/packages', require('./routes/packages'));
 app.use('/api/service', require('./routes/serviceStatus'));
 app.use('/api/unlimited', require('./routes/unlimited'));
 app.use('/health', require('./routes/health'));

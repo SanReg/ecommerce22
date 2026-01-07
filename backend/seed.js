@@ -4,6 +4,7 @@ require('dotenv').config();
 const User = require('./models/User');
 const Book = require('./models/Book');
 const RedemptionCode = require('./models/RedemptionCode');
+const Package = require('./models/Package');
 
 async function seedDatabase() {
   try {
@@ -16,6 +17,7 @@ async function seedDatabase() {
     await User.deleteMany({});
     await Book.deleteMany({});
     await RedemptionCode.deleteMany({});
+    await Package.deleteMany({});
 
     console.log('Creating demo users...');
     const adminUser = await User.create({
@@ -85,6 +87,18 @@ async function seedDatabase() {
       { code: 'NEW75', checks: 75 }
     ]);
 
+    console.log('Creating credit packages...');
+    const packages = await Package.create([
+      { id: 'pack-1', label: '1 Check', checks: 1, priceUsd: 4, order: 0 },
+      { id: 'pack-5', label: '5 Checks', checks: 5, priceUsd: 15, order: 1 },
+      { id: 'pack-10', label: '10 Checks', checks: 10, priceUsd: 30, order: 2 },
+      { id: 'pack-20', label: '20 Checks', checks: 20, priceUsd: 50, order: 3 },
+      { id: 'pack-50', label: '50 Checks', checks: 50, priceUsd: 120, order: 4 },
+      { id: 'pack-100', label: '100 Checks', checks: 100, priceUsd: 220, order: 5 },
+      { id: 'unlimited-1w', label: 'Unlimited 1 Week (3 checks/day)', checks: 3, priceUsd: 30, isUnlimited: true, order: 6 },
+      { id: 'unlimited-1m', label: 'Unlimited 1 Month (10 checks/day)', checks: 10, priceUsd: 120, isUnlimited: true, order: 7 }
+    ]);
+
     console.log('Database seeded successfully!');
     console.log(`
       Admin User:
@@ -100,6 +114,7 @@ async function seedDatabase() {
       WELCOME100, BONUS50, SUMMER25, SPECIAL200, NEW75
       
       Books Created: ${books.length}
+      Packages Created: ${packages.length}
     `);
 
     await mongoose.connection.close();

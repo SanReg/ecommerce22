@@ -74,7 +74,9 @@
 
     <div class="tabs">
       <button class="tab-btn active" data-tab="orders">Manage Orders <span id="pendingBadge" style="display: none; background: #ef4444; color: white; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; margin-left: 0.5rem; position: relative; top: -2px;">0</span></button>
+      <button class="tab-btn" data-tab="tickets">Credit Tickets</button>
       <button class="tab-btn" data-tab="users">Users & Credits</button>
+      <button class="tab-btn" data-tab="packages">Packages</button>
       <button class="tab-btn" data-tab="unlimited">Unlimited Users</button>
       <button class="tab-btn" data-tab="codes">Codes</button>
       <button class="tab-btn" data-tab="status">Service Status</button>
@@ -89,6 +91,13 @@
       <div id="allOrdersContainer"></div>
     </div>
 
+    <!-- Tickets Tab -->
+    <div id="tickets" class="tab-content">
+      <h2>Credit Purchase Tickets</h2>
+      <p style="color: #666; margin-bottom: 1.5rem;">Review proof, leave remarks (include redeem code on completion), and update ticket status.</p>
+      <div id="ticketsAdminContainer"></div>
+    </div>
+
     <!-- Users & Checks Tab -->
     <div id="users" class="tab-content">
       <h2>Users Overview</h2>
@@ -99,6 +108,21 @@
         <input type="text" id="usersSearchInput" placeholder="🔍 Search by username or email" style="width: 100%; max-width: 400px; padding: 0.75rem 1rem; border: 1px solid #ddd; border-radius: 6px; font-size: 0.95rem;">
       </div>
       <div id="allUsersContainer"></div>
+    </div>
+
+    <!-- Packages Tab -->
+    <div id="packages" class="tab-content">
+      <h2>Manage Credit Packages</h2>
+      <p style="color: #666; margin-bottom: 1.5rem;">
+        Edit package labels, credit amounts, and prices. Changes apply immediately to all users.
+      </p>
+      <div style="margin: 0 0 1rem 0; display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
+        <button id="downloadBackupBtn" class="btn-secondary" style="background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%); color: white; border: none; padding: 0.75rem 1.1rem; font-weight: 700;">
+          ⬇️ Download Backup (JSON)
+        </button>
+        <span style="color: #475569; font-size: 0.9rem;">Downloads a full JSON snapshot of MongoDB data.</span>
+      </div>
+      <div id="packagesContainer"></div>
     </div>
 
     <!-- Unlimited Users Tab -->

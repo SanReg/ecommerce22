@@ -3,6 +3,7 @@ let currentUser = localStorage.getItem('currentUser') ? JSON.parse(localStorage.
 let allOrders = [];
 let allUsers = [];
 let allUnlimitedUsers = [];
+let allTickets = [];
 let lastPendingOrderCount = 0;
 let orderCheckInterval = null;
 
@@ -174,8 +175,15 @@ document.addEventListener('DOMContentLoaded', () => {
   displayAdminInfo();
   setupTabButtons();
   loadAllOrders();
+  loadTicketsAdmin();
   loadAllUsers();
+  loadPackagesAdmin();
   loadUnlimitedUsers();
+
+  const downloadBackupBtn = document.getElementById('downloadBackupBtn');
+  if (downloadBackupBtn) {
+    downloadBackupBtn.addEventListener('click', downloadBackup);
+  }
   loadCodes();
   startOrderMonitoring();
 
@@ -211,6 +219,8 @@ function switchTab(tabName) {
     loadServiceStatus();
   } else if (tabName === 'unlimited') {
     loadUnlimitedUsers();
+  } else if (tabName === 'tickets') {
+    loadTicketsAdmin();
   }
 }
 
@@ -338,6 +348,109 @@ function displayAllOrders(orders) {
 
   html += '</div>';
   container.innerHTML = html;
+}
+
+async function loadTicketsAdmin() {
+  try {
+    const response = await fetch('/api/tickets/admin', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await response.json();
+    if (response.ok && Array.isArray(data)) {
+      allTickets = data;
+      displayTicketsAdmin(data);
+    } else {
+      showMessage((data && data.message) || 'Could not load tickets', 'error');
+    }
+  } catch (error) {
+    console.error('Admin tickets fetch error:', error);
+    showMessage('Error loading tickets', 'error');
+  }
+}
+
+function displayTicketsAdmin(tickets) {
+  const container = document.getElementById('ticketsAdminContainer');
+  if (!container) return;
+
+  if (!tickets.length) {
+    container.innerHTML = '<div class="empty-state"><h2>No tickets</h2><p>No credit tickets submitted yet.</p></div>';
+    return;
+  }
+
+  const statusColors = {
+    pending: '#f59e0b',
+    submitted: '#3b82f6',
+    completed: '#10b981',
+    failed: '#ef4444'
+  };
+
+  let html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1rem;">';
+
+  tickets.forEach(ticket => {
+    const statusColor = statusColors[ticket.status] || '#64748b';
+    const proofUrl = ticket.paymentProof && (ticket.paymentProof.url || ticket.paymentProof.secure_url);
+    const userName = ticket.user?.username || ticket.user?.email || 'Unknown user';
+    const userEmail = ticket.user?.email || 'N/A';
+    const createdAt = ticket.createdAt ? new Date(ticket.createdAt).toLocaleString() : '';
+    const optLabel = ticket.paymentOption ? ` • ${ticket.paymentOption}` : '';
+
+    html += `
+      <div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 1rem; box-shadow: 0 6px 16px rgba(0,0,0,0.06);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
+          <div>
+            <div style="font-weight: 700; color: #1f2937;">${ticket.packageLabel}</div>
+            <div style="color: #475569; font-size: 0.9rem; font-weight: 600;">${ticket.checksRequested} credits • $${Number(ticket.priceUsd || 0).toFixed(2)}</div>
+          </div>
+          <span style="padding: 0.3rem 0.6rem; border-radius: 999px; background: ${statusColor}1A; color: ${statusColor}; font-weight: 700; font-size: 0.85rem; text-transform: capitalize;">${ticket.status}</span>
+        </div>
+        <p style="margin: 0 0 0.35rem 0; color: #1f2937; font-size: 0.9rem; font-weight: 600;"><strong>User:</strong> ${userName} (${userEmail})</p>
+        <p style="margin: 0 0 0.35rem 0; color: #334155; font-size: 0.9rem; font-weight: 500;"><strong>Payment:</strong> ${ticket.paymentMethod}${optLabel}</p>
+        ${ticket.userNote ? `<p style="margin: 0 0 0.35rem 0; color: #475569; font-size: 0.9rem;"><strong>User note:</strong> ${ticket.userNote}</p>` : ''}
+        ${ticket.adminRemarks ? `<p style="margin: 0 0 0.35rem 0; color: #0f172a; font-size: 0.9rem; font-weight: 700; background: #f1f5f9; padding: 0.5rem; border-radius: 6px;"><strong>Admin remarks:</strong> ${ticket.adminRemarks}</p>` : ''}
+        <p style="margin: 0 0 0.35rem 0; color: #475569; font-size: 0.9rem; font-weight: 500;"><strong>Created:</strong> ${createdAt}</p>
+        ${proofUrl ? `<a href="${proofUrl}" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 0.35rem; color: #6366f1; font-weight: 700; text-decoration: underline; margin-top: 0.4rem;">📎 View Payment Proof</a>` : '<p style="margin: 0 0 0.35rem 0; color: #ef4444; font-weight: 700; font-size: 0.95rem;">⚠️ No payment proof uploaded</p>'}
+        <div style="display: flex; gap: 0.5rem; margin-top: 0.8rem;">
+          ${ticket.status === 'completed' || ticket.status === 'failed' ? '<span style="color:#64748b; font-size: 0.9rem; font-weight: 600;">Closed</span>' : `
+            <button class="btn-success" style="flex:1;" onclick="updateTicketStatus('${ticket._id}','completed')">Mark Completed</button>
+            <button class="btn-danger" style="flex:1;" onclick="updateTicketStatus('${ticket._id}','failed')">Mark Failed</button>`}
+        </div>
+      </div>
+    `;
+  });
+
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+async function updateTicketStatus(id, status) {
+  const message = status === 'completed'
+    ? 'Enter remarks (include redeem code for the user)'
+    : 'Enter failure reason (visible to user)';
+  const adminRemarks = prompt(message) || '';
+  if (adminRemarks.trim().length < 3) {
+    alert('Please add a clear remark (min 3 characters).');
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/tickets/admin/${id}/status`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ status, adminRemarks })
+    });
+    const data = await response.json();
+    if (response.ok) {
+      showMessage(data.message || 'Ticket updated', 'success');
+      loadTicketsAdmin();
+    } else {
+      showMessage(data.message || 'Could not update ticket', 'error');
+    }
+  } catch (error) {
+    showMessage('Error updating ticket: ' + error.message, 'error');
+  }
 }
 
 async function markFailed(orderId) {
@@ -1645,5 +1758,174 @@ function filterAndDisplayUnlimitedUsers(query) {
   });
   
   displayUnlimitedUsers(filtered);
+}
+
+// ========== PACKAGE MANAGEMENT ==========
+async function loadPackagesAdmin() {
+  try {
+    const response = await fetch('/api/packages/all', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await response.json();
+    if (response.ok) {
+      displayPackagesAdmin(data);
+    } else {
+      showMessage(data.message || 'Could not load packages', 'error');
+    }
+  } catch (error) {
+    showMessage('Error loading packages: ' + error.message, 'error');
+  }
+}
+
+function displayPackagesAdmin(packages) {
+  const container = document.getElementById('packagesContainer');
+  if (!container) return;
+
+  if (!packages || packages.length === 0) {
+    container.innerHTML = '<div style="background: white; padding: 2rem; border-radius: 12px; text-align: center; color: #666;">No packages found. Add your first package below.</div>';
+    return;
+  }
+
+  let html = '<div style="display: grid; gap: 1.5rem;">';
+
+  packages.forEach(pkg => {
+    html += `
+      <div style="background: white; border: 2px solid ${pkg.isActive ? '#10b981' : '#e5e7eb'}; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 200px;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+              <span style="font-size: 1.5rem;">${pkg.isUnlimited ? '♾️' : '💎'}</span>
+              <div>
+                <input type="text" id="label-${pkg.id}" value="${pkg.label}" 
+                  style="font-size: 1.1rem; font-weight: 700; border: 1px solid #e5e7eb; border-radius: 6px; padding: 0.5rem; width: 100%; max-width: 300px;" 
+                  placeholder="Package Label">
+                <p style="margin: 0.3rem 0 0 0; color: #666; font-size: 0.85rem;">ID: ${pkg.id}</p>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-top: 1rem;">
+              <div>
+                <label style="display: block; margin-bottom: 0.3rem; color: #666; font-size: 0.9rem; font-weight: 600;">Credits</label>
+                <input type="number" id="checks-${pkg.id}" value="${pkg.checks}" min="1" 
+                  style="width: 100%; border: 1px solid #e5e7eb; border-radius: 6px; padding: 0.6rem; font-size: 0.95rem;">
+              </div>
+              <div>
+                <label style="display: block; margin-bottom: 0.3rem; color: #666; font-size: 0.9rem; font-weight: 600;">Price (USD)</label>
+                <input type="number" id="price-${pkg.id}" value="${pkg.priceUsd}" min="0" step="0.01" 
+                  style="width: 100%; border: 1px solid #e5e7eb; border-radius: 6px; padding: 0.6rem; font-size: 0.95rem;">
+              </div>
+            </div>
+            <div style="margin-top: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" id="unlimited-${pkg.id}" ${pkg.isUnlimited ? 'checked' : ''} 
+                  style="width: 18px; height: 18px; cursor: pointer; accent-color: #6366f1;">
+                <span style="color: #666; font-size: 0.9rem;">Unlimited Package</span>
+              </label>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <button onclick="updatePackage('${pkg.id}')" class="btn-primary" style="white-space: nowrap; padding: 0.6rem 1.2rem;">
+              💾 Save Changes
+            </button>
+            <button onclick="togglePackageStatus('${pkg.id}', ${!pkg.isActive})" 
+              class="btn-secondary" style="white-space: nowrap; padding: 0.6rem 1.2rem; background: ${pkg.isActive ? '#ef4444' : '#10b981'}; color: white;">
+              ${pkg.isActive ? '❌ Deactivate' : '✅ Activate'}
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+async function updatePackage(pkgId) {
+  const label = document.getElementById(`label-${pkgId}`)?.value.trim();
+  const checks = document.getElementById(`checks-${pkgId}`)?.value;
+  const priceUsd = document.getElementById(`price-${pkgId}`)?.value;
+  const isUnlimited = document.getElementById(`unlimited-${pkgId}`)?.checked;
+
+  if (!label || !checks || priceUsd === undefined) {
+    showMessage('Please fill in all fields', 'error');
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/packages/${pkgId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        label,
+        checks: Number(checks),
+        priceUsd: Number(priceUsd),
+        isUnlimited
+      })
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      showMessage('Package updated successfully!', 'success');
+      loadPackagesAdmin();
+    } else {
+      showMessage(data.message || 'Could not update package', 'error');
+    }
+  } catch (error) {
+    showMessage('Error updating package: ' + error.message, 'error');
+  }
+}
+
+async function togglePackageStatus(pkgId, activate) {
+  try {
+    const response = await fetch(`/api/packages/${pkgId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ isActive: activate })
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      showMessage(`Package ${activate ? 'activated' : 'deactivated'} successfully!`, 'success');
+      loadPackagesAdmin();
+    } else {
+      showMessage(data.message || 'Could not update status', 'error');
+    }
+  } catch (error) {
+    showMessage('Error updating status: ' + error.message, 'error');
+  }
+}
+
+async function downloadBackup() {
+  try {
+    const response = await fetch('/api/admin/export', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      showMessage(data.message || 'Could not download backup', 'error');
+      return;
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const ts = new Date().toISOString().replace(/[:]/g, '-');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `mongo-backup-${ts}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+    showMessage('Backup downloaded successfully', 'success');
+  } catch (error) {
+    showMessage('Error downloading backup: ' + error.message, 'error');
+  }
 }
 
