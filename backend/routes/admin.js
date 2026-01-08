@@ -6,6 +6,7 @@ const RedemptionCode = require('../models/RedemptionCode');
 const Ticket = require('../models/Ticket');
 const Package = require('../models/Package');
 const ServiceStatus = require('../models/ServiceStatus');
+const MaintenanceStatus = require('../models/MaintenanceStatus');
 const { authMiddleware, adminMiddleware } = require('../middleware/auth');
 const { uploadBuffer, cloudinary } = require('../utils/cloudinary');
 const bcrypt = require('bcryptjs');
@@ -340,6 +341,67 @@ router.get('/export', authMiddleware, adminMiddleware, async (req, res) => {
     res.send(JSON.stringify(payload, null, 2));
   } catch (error) {
     res.status(500).json({ message: 'Failed to export data', error: error.message });
+  }
+});
+
+// Get maintenance status
+router.get('/maintenance', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const maintenanceStatus = await MaintenanceStatus.getInstance();
+    res.json(maintenanceStatus);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Toggle maintenance mode
+router.post('/maintenance/toggle', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const maintenanceStatus = await MaintenanceStatus.getInstance();
+    maintenanceStatus.isEnabled = !maintenanceStatus.isEnabled;
+    maintenanceStatus.updatedAt = new Date();
+    await maintenanceStatus.save();
+    
+    res.json({ 
+      message: `Maintenance mode ${maintenanceStatus.isEnabled ? 'enabled' : 'disabled'}`,
+      maintenanceStatus 
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Update maintenance message
+router.put('/maintenance/message', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const { message, estimatedEndTime } = req.body;
+    const maintenanceStatus = await MaintenanceStatus.getInstance();
+    
+    if (message) {
+      maintenanceStatus.message = message;
+    }
+    if (estimatedEndTime) {
+      maintenanceStatus.estimatedEndTime = new Date(estimatedEndTime);
+    }
+    maintenanceStatus.updatedAt = new Date();
+    await maintenanceStatus.save();
+    
+    res.json({ 
+      message: 'Maintenance status updated',
+      maintenanceStatus 
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Public endpoint for maintenance status (no auth required)
+router.get('/maintenance-public', async (req, res) => {
+  try {
+    const maintenanceStatus = await MaintenanceStatus.getInstance();
+    res.json(maintenanceStatus);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 });
 

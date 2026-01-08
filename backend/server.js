@@ -5,6 +5,7 @@ const fileUpload = require('express-fileupload');
 const path = require('path');
 const cron = require('node-cron');
 const User = require('./models/User');
+const maintenanceMiddleware = require('./middleware/maintenance');
 require('dotenv').config();
 
 const app = express();
@@ -14,6 +15,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(fileUpload());
+app.use(maintenanceMiddleware);
 app.use(express.static(path.join(__dirname, '../frontend'), { index: false }));
 // Backward compatibility: serve existing local uploads if present
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

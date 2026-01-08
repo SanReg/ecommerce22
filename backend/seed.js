@@ -5,6 +5,7 @@ const User = require('./models/User');
 const Book = require('./models/Book');
 const RedemptionCode = require('./models/RedemptionCode');
 const Package = require('./models/Package');
+const MaintenanceStatus = require('./models/MaintenanceStatus');
 
 async function seedDatabase() {
   try {
@@ -18,6 +19,7 @@ async function seedDatabase() {
     await Book.deleteMany({});
     await RedemptionCode.deleteMany({});
     await Package.deleteMany({});
+    await MaintenanceStatus.deleteMany({});
 
     console.log('Creating demo users...');
     const adminUser = await User.create({
@@ -98,6 +100,12 @@ async function seedDatabase() {
       { id: 'unlimited-1w', label: 'Unlimited 1 Week (3 checks/day)', checks: 3, priceUsd: 30, isUnlimited: true, order: 6 },
       { id: 'unlimited-1m', label: 'Unlimited 1 Month (10 checks/day)', checks: 10, priceUsd: 120, isUnlimited: true, order: 7 }
     ]);
+
+    console.log('Initializing maintenance status...');
+    await MaintenanceStatus.create({
+      isEnabled: false,
+      message: 'We are currently performing maintenance. Please check back soon!'
+    });
 
     console.log('Database seeded successfully!');
     console.log(`

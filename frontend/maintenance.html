@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <title>Maintenance Mode - Check My Paper</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #ec4899;
+            --accent: #06b6d4;
+            --bg-dark: #0f172a;
+            --bg-darker: #020617;
+            --card-bg: rgba(15, 23, 42, 0.8);
+            --card-border: rgba(100, 116, 139, 0.3);
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+        }
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-darker) 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+            position: relative;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            will-change: auto;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 50% 0%, rgba(6, 182, 212, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        header {
+            background: rgba(15, 23, 42, 0.95);
+            padding: 1.2rem;
+            border-bottom: 1px solid var(--card-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .brand img {
+            height: 44px;
+            width: auto;
+            border-radius: 10px;
+            transition: transform 0.2s ease;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+        }
+
+        .brand img:active {
+            transform: scale(0.95);
+        }
+
+        .brand-copy {
+            display: flex;
+            flex-direction: column;
+            gap: 0.1rem;
+            line-height: 1.3;
+        }
+
+        .brand-name {
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .brand-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .maintenance-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            padding: 2rem 1.5rem;
+            text-align: center;
+        }
+
+        .maintenance-content {
+            max-width: 650px;
+            width: 100%;
+        }
+
+        .maintenance-icon {
+            font-size: 80px;
+            margin-bottom: 1.5rem;
+            animation: bounce 2s infinite;
+            display: inline-block;
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(99, 102, 241, 0.2);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1.5rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0 0 1rem 0;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+
+        .maintenance-message {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin: 1.5rem 0;
+            font-weight: 500;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin: 2rem 0;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            background: var(--error);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .status-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .estimated-time {
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid var(--card-border);
+            border-left: 4px solid var(--primary);
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            display: none;
+        }
+
+        .support-text {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--card-border);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .maintenance-message {
+                font-size: 1rem;
+            }
+
+            .maintenance-icon {
+                font-size: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand">
+            <img src="/uploads/logo.png" alt="Check My Paper logo" loading="lazy">
+            <div class="brand-copy">
+                <span class="brand-name">Check My Paper</span>
+                <span class="brand-sub">Plagiarism & AI Detection</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="maintenance-container">
+        <div class="maintenance-content">
+            <div class="maintenance-icon">🔧</div>
+            <div class="spinner"></div>
+            <h1>Maintenance in Progress</h1>
+            <p class="maintenance-message" id="maintenanceMessage">
+                We are currently performing scheduled maintenance to improve your experience. We'll be back online shortly!
+            </p>
+            <div class="estimated-time" id="estimatedTime">
+                <div style="margin-bottom: 0.5rem;">
+                    <strong style="font-size: 1.1rem; color: var(--primary);" id="countdownText">Loading...</strong>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-muted);">
+                    Expected back: <strong id="estimatedTimeText"></strong>
+                </div>
+            </div>
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <div class="status-text">Service Temporarily Unavailable</div>
+            </div>
+            <p class="support-text">
+                Thank you for your patience. If you have any questions, please try again in a few minutes.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        let estimatedEndTime = null;
+
+        // Fetch maintenance status and update message
+        async function fetchMaintenanceStatus() {
+            try {
+                const response = await fetch('/api/admin/maintenance-public');
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Maintenance status fetched:', data);
+                    // If maintenance is disabled, redirect to homepage immediately
+                    if (data && data.isEnabled === false) {
+                        window.location.href = '/home.html';
+                        return;
+                    }
+                    if (data.message) {
+                        document.getElementById('maintenanceMessage').textContent = data.message;
+                    }
+                    if (data.estimatedEndTime) {
+                        estimatedEndTime = new Date(data.estimatedEndTime);
+                        document.getElementById('estimatedTimeText').textContent = estimatedEndTime.toLocaleString();
+                        document.getElementById('estimatedTime').style.display = 'block';
+                        updateCountdown();
+                    }
+                }
+            } catch (error) {
+                console.log('Could not fetch maintenance details:', error);
+            }
+        }
+
+        // Update countdown timer
+        function updateCountdown() {
+            if (!estimatedEndTime) return;
+
+            const now = new Date();
+            const diff = estimatedEndTime - now;
+
+            if (diff <= 0) {
+                document.getElementById('countdownText').textContent = 'Should be back online now!';
+                return;
+            }
+
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            let timeString = '';
+            if (hours > 0) {
+                timeString += `${hours}h ${minutes}m ${seconds}s`;
+            } else if (minutes > 0) {
+                timeString += `${minutes}m ${seconds}s`;
+            } else {
+                timeString += `${seconds}s`;
+            }
+
+            document.getElementById('countdownText').textContent = timeString;
+        }
+
+        // Check every 30 seconds if maintenance is over
+        function checkMaintenanceStatus() {
+            fetch('/api/admin/maintenance-public')
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.isEnabled) {
+                        // Maintenance is over, redirect to homepage
+                        window.location.href = '/home.html';
+                    }
+                })
+                .catch(err => {
+                    console.log('Checking maintenance status...', err);
+                });
+        }
+
+        // Initial fetch
+        fetchMaintenanceStatus();
+
+        // Update countdown every second
+        setInterval(updateCountdown, 1000);
+
+        // Check every 30 seconds
+        setInterval(checkMaintenanceStatus, 30000);
+    </script>
+
+    <!--Start of Tawk.to Script-->
+    <script type="text/javascript">
+    var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+    Tawk_API.customStyle = {
+      visibility : {
+        desktop : {
+          position : 'br',
+          xOffset : 20,
+          yOffset : 20
+        },
+        mobile : {
+          position : 'br',
+          xOffset : 10,
+          yOffset : 10
+        }
+      },
+      zIndex: 999999
+    };
+    Tawk_API.onLoad = function(){
+      Tawk_API.setAttributes({
+        'name'  : 'Visitor',
+        'email' : ''
+      }, function(error){});
+    };
+    (function(){
+    var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+    s1.async=true;
+    s1.src='https://embed.tawk.to/694cd986d25d19197dc2e257/1jda33dpr';
+    s1.charset='UTF-8';
+    s1.setAttribute('crossorigin','*');
+    s0.parentNode.insertBefore(s1,s0);
+    })();
+    </script>
+    <style>
+      /* Tawk.to Widget Customization - Purple Theme */
+      #tawk-bubble-container,
+      .tawk-button,
+      .tawk-min-container {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+      }
+      .tawk-button-circle {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+        border-color: #6366f1 !important;
+      }
+      .tawk-button:hover {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+      }
+    </style>
+    <!--End of Tawk.to Script-->
