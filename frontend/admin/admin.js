@@ -5,7 +5,9 @@ let allUsers = [];
 let allUnlimitedUsers = [];
 let allTickets = [];
 let lastPendingOrderCount = 0;
+let lastPendingTicketCount = 0;
 let orderCheckInterval = null;
+let ticketCheckInterval = null;
 
 function refreshUsersView() {
   if (Array.isArray(allUsers) && allUsers.length > 0) {
@@ -56,6 +58,52 @@ function playNotificationSound() {
   }
 }
 
+// Play notification sound for new tickets (different tone pattern)
+function playTicketNotificationSound() {
+  try {
+    // Resume audio context if suspended (required by some browsers)
+    const audioContextClass = window.AudioContext || window.webkitAudioContext;
+    const audioContext = new audioContextClass();
+    
+    if (audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+    
+    // Create a different pattern for ticket alerts - alternating tones for 5 seconds
+    const now = audioContext.currentTime;
+    const beepDuration = 0.25;
+    const beepGap = 0.1;
+    const totalDuration = 5; // 5 seconds total
+    let currentTime = now;
+    let useHighFreq = true;
+    
+    // Create alternating high-low frequency pattern for 5 seconds
+    while (currentTime - now < totalDuration) {
+      const osc = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      
+      osc.connect(gain);
+      gain.connect(audioContext.destination);
+      
+      // Alternate between two different frequencies for distinct sound
+      osc.frequency.value = useHighFreq ? 1100 : 750; // Hz - different from order alerts
+      osc.type = 'sine';
+      
+      // Loud - 0.7 gain
+      gain.gain.setValueAtTime(0.7, currentTime);
+      gain.gain.setValueAtTime(0, currentTime + beepDuration);
+      
+      osc.start(currentTime);
+      osc.stop(currentTime + beepDuration);
+      
+      currentTime += beepDuration + beepGap;
+      useHighFreq = !useHighFreq; // Toggle frequency for next beep
+    }
+  } catch (error) {
+    console.error('Error playing ticket notification sound:', error);
+  }
+}
+
 // Show toast notification for new order
 function showOrderNotification(count) {
   const toast = document.createElement('div');
@@ -80,6 +128,43 @@ function showOrderNotification(count) {
       <div>
         <p style="margin: 0; font-weight: 700;">New Order${count > 1 ? 's' : ''}!</p>
         <p style="margin: 0.25rem 0 0 0; opacity: 0.9; font-size: 0.9rem;">${count} pending order${count > 1 ? 's' : ''} waiting for review</p>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(toast);
+  
+  // Auto-remove after 5 seconds
+  setTimeout(() => {
+    toast.style.animation = 'slideOut 0.3s ease';
+    setTimeout(() => toast.remove(), 300);
+  }, 5000);
+}
+
+// Show toast notification for new credit ticket
+function showTicketNotification(count) {
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    position: fixed;
+    bottom: 8rem;
+    right: 2rem;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    padding: 1.5rem 2rem;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    z-index: 9999;
+    font-weight: 600;
+    font-size: 1rem;
+    animation: slideIn 0.3s ease;
+  `;
+  
+  toast.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <span style="font-size: 1.5rem;">💳</span>
+      <div>
+        <p style="margin: 0; font-weight: 700;">New Credit Ticket${count > 1 ? 's' : ''}!</p>
+        <p style="margin: 0.25rem 0 0 0; opacity: 0.9; font-size: 0.9rem;">${count} pending ticket${count > 1 ? 's' : ''} waiting for review</p>
       </div>
     </div>
   `;
@@ -166,6 +251,36 @@ function startOrderMonitoring() {
   }, 10000); // Check every 10 seconds
 }
 
+// Check for new credit tickets every 10 seconds
+function checkForNewTickets() {
+  ticketCheckInterval = setInterval(async () => {
+    try {
+      const response = await fetch('/api/tickets/admin', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (!response.ok) return;
+      
+      const tickets = await response.json();
+      if (!Array.isArray(tickets)) return;
+      
+      // Count pending and submitted tickets
+      const pendingTickets = tickets.filter(t => t.status === 'pending' || t.status === 'submitted').length;
+      
+      // If new pending tickets detected, alert admin
+      if (pendingTickets > lastPendingTicketCount) {
+        const newTicketCount = pendingTickets - lastPendingTicketCount;
+        playTicketNotificationSound();
+        showTicketNotification(newTicketCount);
+      }
+      
+      lastPendingTicketCount = pendingTickets;
+    } catch (error) {
+      console.error('Error checking for new tickets:', error);
+    }
+  }, 10000); // Check every 10 seconds
+}
+
 // Check if user is admin
 if (!token || !currentUser || !currentUser.isAdmin) {
   window.location.href = '/login.html';
@@ -178,6 +293,9 @@ document.addEventListener('DOMContentLoaded', () => {
   loadTicketsAdmin();
   loadAllUsers();
   loadPackagesAdmin();
+  
+  // Start checking for new tickets
+  checkForNewTickets();
   loadUnlimitedUsers();
 
   const downloadBackupBtn = document.getElementById('downloadBackupBtn');
@@ -384,7 +502,42 @@ function displayTicketsAdmin(tickets) {
     failed: '#ef4444'
   };
 
-  let html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1rem;">';
+  // Calculate statistics
+  const totalTickets = tickets.length;
+  const pendingTickets = tickets.filter(t => t.status === 'pending').length;
+  const submittedTickets = tickets.filter(t => t.status === 'submitted').length;
+  const completedTickets = tickets.filter(t => t.status === 'completed').length;
+  const failedTickets = tickets.filter(t => t.status === 'failed').length;
+  const completedCredits = tickets.filter(t => t.status === 'completed').reduce((sum, t) => sum + (Number(t.checksRequested) || 0), 0);
+  const completedRevenue = tickets.filter(t => t.status === 'completed').reduce((sum, t) => sum + (Number(t.priceUsd) || 0), 0);
+
+  // Display statistics
+  let html = `
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-top: 1rem; margin-bottom: 1.5rem;">
+      <div style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border: 2px solid #e2e8f0; border-radius: 12px; padding: 1rem; text-align: center;">
+        <div style="color: #6b7280; font-size: 0.85rem;">Total Tickets</div>
+        <div style="color: #1f2937; font-size: 1.3rem; font-weight: 800;">${totalTickets}</div>
+      </div>
+      <div style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border: 2px solid #93c5fd; border-radius: 12px; padding: 1rem; text-align: center;">
+        <div style="color: #1e40af; font-size: 0.85rem;">Submitted</div>
+        <div style="color: #1e40af; font-size: 1.3rem; font-weight: 800;">${submittedTickets}</div>
+      </div>
+      <div style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border: 2px solid #a7f3d0; border-radius: 12px; padding: 1rem; text-align: center;">
+        <div style="color: #065f46; font-size: 0.85rem;">Completed</div>
+        <div style="color: #065f46; font-size: 1.3rem; font-weight: 800;">${completedTickets}</div>
+      </div>
+      <div style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border: 2px solid #fca5a5; border-radius: 12px; padding: 1rem; text-align: center;">
+        <div style="color: #7f1d1d; font-size: 0.85rem;">Failed</div>
+        <div style="color: #7f1d1d; font-size: 1.3rem; font-weight: 800;">${failedTickets}</div>
+      </div>
+      <div style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border: 2px solid #6ee7b7; border-radius: 12px; padding: 1rem; text-align: center;">
+        <div style="color: #065f46; font-size: 0.85rem;">Completed Revenue</div>
+        <div style="color: #065f46; font-size: 1.3rem; font-weight: 800;">$${completedRevenue.toFixed(2)}</div>
+      </div>
+    </div>
+  `;
+
+  html += '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1rem;">';
 
   tickets.forEach(ticket => {
     const statusColor = statusColors[ticket.status] || '#64748b';
