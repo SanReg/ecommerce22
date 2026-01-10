@@ -8,10 +8,22 @@ let lastPendingOrderCount = 0;
 let lastPendingTicketCount = 0;
 let orderCheckInterval = null;
 let ticketCheckInterval = null;
+let showOnlyPositiveChecks = false;
+
+function toggleChecksFilter() {
+  const checkbox = document.getElementById('checksGreaterThanZero');
+  showOnlyPositiveChecks = checkbox.checked;
+  refreshUsersView();
+}
 
 function refreshUsersView() {
   if (Array.isArray(allUsers) && allUsers.length > 0) {
-    displayAllUsers(allUsers);
+    if (showOnlyPositiveChecks) {
+      const filteredUsers = allUsers.filter(user => Number(user.checks) > 0);
+      displayAllUsers(filteredUsers);
+    } else {
+      displayAllUsers(allUsers);
+    }
   }
 }
 
@@ -298,10 +310,6 @@ document.addEventListener('DOMContentLoaded', () => {
   checkForNewTickets();
   loadUnlimitedUsers();
 
-  const downloadBackupBtn = document.getElementById('downloadBackupBtn');
-  if (downloadBackupBtn) {
-    downloadBackupBtn.addEventListener('click', downloadBackup);
-  }
   loadCodes();
   startOrderMonitoring();
 
@@ -652,7 +660,6 @@ async function loadAllUsers() {
     });
     const users = await response.json();
     allUsers = Array.isArray(users) ? users : [];
-    displayAllUsers(allUsers);
     refreshUsersView();
     
     // Add search listener
@@ -765,18 +772,121 @@ function displayAllUsers(users) {
 
 // Filter and display users based on search query
 function filterAndDisplayUsers(query) {
+  let usersToFilter = allUsers;
+  
+  // Apply checks filter first
+  if (showOnlyPositiveChecks) {
+    usersToFilter = usersToFilter.filter(user => Number(user.checks) > 0);
+  }
+  
   if (!query) {
-    displayAllUsers(allUsers);
+    displayAllUsers(usersToFilter);
     return;
   }
   
-  const filtered = allUsers.filter(user => {
+  const filtered = usersToFilter.filter(user => {
     const username = (user.username || '').toLowerCase();
     const email = (user.email || '').toLowerCase();
     return username.includes(query) || email.includes(query);
   });
   
   displayAllUsersFiltered(filtered);
+}
+
+// Download users with credits > 0 or isUnlimited: true
+function downloadQualifiedUsers() {
+  // Filter users with checks > 0 or isUnlimited: true
+  const qualifiedUsers = allUsers.filter(user => {
+    const hasCredits = Number(user.checks) > 0;
+    const isUnlimited = user.isUnlimited === true;
+    return hasCredits || isUnlimited;
+  });
+
+  if (qualifiedUsers.length === 0) {
+    showMessage('No users found with Credits > 0 or Unlimited access', 'error');
+    return;
+  }
+
+  // Prepare data for download
+  const userData = qualifiedUsers.map(user => {
+    const userOrders = allOrders.filter(o => {
+      if (!o.user) return false;
+      const orderUserId = typeof o.user === 'object' ? (o.user._id || o.user.id || o.user) : o.user;
+      return String(orderUserId) === String(user._id);
+    });
+    
+    const unlimitedSettings = user.unlimitedSettings || {};
+    const subscriptionStartDate = unlimitedSettings.subscriptionStartDate 
+      ? new Date(unlimitedSettings.subscriptionStartDate).toLocaleString()
+      : 'N/A';
+    const creditsResetAt = unlimitedSettings.creditsResetAt
+      ? new Date(unlimitedSettings.creditsResetAt).toLocaleString()
+      : 'N/A';
+    
+    return {
+      'User ID': user._id,
+      'Username': user.username,
+      'Email': user.email,
+      'Checks': user.checks,
+      'Is Unlimited': user.isUnlimited ? 'Yes' : 'No',
+      'Daily Credits': unlimitedSettings.dailyCredits || 0,
+      'Daily Credits Used Today': unlimitedSettings.dailyCreditsUsedToday || 0,
+      'Subscription Days Remaining': unlimitedSettings.subscriptionDaysRemaining || 0,
+      'Subscription Start Date': subscriptionStartDate,
+      'Credits Reset At': creditsResetAt,
+      'Is Admin': user.isAdmin ? 'Yes' : 'No',
+      'Admin Notes': user.adminPrivateNotes || '',
+      'Total Orders': userOrders.length,
+      'Completed Orders': userOrders.filter(o => o.status === 'completed').length,
+      'Failed Orders': userOrders.filter(o => o.status === 'failed').length,
+      'Pending Orders': userOrders.filter(o => o.status === 'pending').length,
+      'Joined Date': new Date(user.createdAt).toLocaleString()
+    };
+  });
+
+  // Convert to CSV
+  const csv = convertToCSV(userData);
+  
+  // Trigger download
+  const timestamp = new Date().toISOString().slice(0, 10);
+  const filename = `users_qualified_${timestamp}.csv`;
+  downloadCSV(csv, filename);
+  
+  showMessage(`Downloaded ${qualifiedUsers.length} qualified users`, 'success');
+}
+
+// Helper function to convert array to CSV
+function convertToCSV(data) {
+  if (!data || data.length === 0) return '';
+
+  const headers = Object.keys(data[0]);
+  const headerRow = headers.map(h => `"${h}"`).join(',');
+  
+  const rows = data.map(row => {
+    return headers.map(header => {
+      const value = row[header];
+      // Escape quotes and wrap in quotes if contains comma or quotes
+      const stringValue = String(value).replace(/"/g, '""');
+      return `"${stringValue}"`;
+    }).join(',');
+  });
+
+  return [headerRow, ...rows].join('\n');
+}
+
+// Helper function to trigger CSV download
+function downloadCSV(csv, filename) {
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
 function displayAllUsersFiltered(filteredUsers) {
@@ -2054,31 +2164,4 @@ async function togglePackageStatus(pkgId, activate) {
   }
 }
 
-async function downloadBackup() {
-  try {
-    const response = await fetch('/api/admin/export', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-
-    if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
-      showMessage(data.message || 'Could not download backup', 'error');
-      return;
-    }
-
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const ts = new Date().toISOString().replace(/[:]/g, '-');
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `mongo-backup-${ts}.json`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.URL.revokeObjectURL(url);
-    showMessage('Backup downloaded successfully', 'success');
-  } catch (error) {
-    showMessage('Error downloading backup: ' + error.message, 'error');
-  }
-}
 
