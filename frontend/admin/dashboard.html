@@ -147,6 +147,7 @@
 
     <div class="tabs">
       <button class="tab-btn active" data-tab="orders">Manage Orders <span id="pendingBadge" style="display: none; background: #ef4444; color: white; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; margin-left: 0.5rem; position: relative; top: -2px;">0</span></button>
+      <button class="tab-btn" data-tab="reports">Reports</button>
       <button class="tab-btn" data-tab="tickets">Credit Tickets</button>
       <button class="tab-btn" data-tab="users">Users & Credits</button>
       <button class="tab-btn" data-tab="packages">Packages</button>
@@ -162,6 +163,35 @@
         View all user orders, mark them as complete, and upload response files.
       </p>
       <div id="allOrdersContainer"></div>
+    </div>
+
+    <!-- Reports Tab -->
+    <div id="reports" class="tab-content">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+        <div>
+          <h2 style="margin: 0 0 0.5rem 0;">Reports Dashboard</h2>
+          <p style="color: #666; margin: 0;">
+            View comprehensive analytics and reports for CheckMyPaper.
+          </p>
+        </div>
+        <button onclick="document.getElementById('reportsIframe').src = document.getElementById('reportsIframe').src" style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); display: flex; align-items: center; gap: 0.5rem;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(99, 102, 241, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(99, 102, 241, 0.3)'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+          Refresh
+        </button>
+      </div>
+      <div style="background: white; padding: 0; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden;">
+        <iframe 
+          id="reportsIframe"
+          src="https://reports.checkmypaper.net/" 
+          style="width: 100%; height: 80vh; border: none; border-radius: 12px;"
+          title="Reports Dashboard"
+          allow="fullscreen"
+        ></iframe>
+      </div>
     </div>
 
     <!-- Tickets Tab -->
