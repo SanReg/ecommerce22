@@ -5,6 +5,7 @@ A complete full-stack ecommerce application built with Node.js, MongoDB, and van
 ## Key Features
 
 ✅ **User Authentication** - Simple register/login without OTP
+✅ **Forgot Password** - Secure password reset via email using Resend
 ✅ **Virtual Currency** - Redeem codes to get "Checks" for purchasing
 ✅ **Product Ordering** - Buy "Books" using checks
 ✅ **File Uploads** - Users upload files with orders, admins respond with files
@@ -214,6 +215,10 @@ Edit `frontend/css/style.css` for colors, fonts, layout
 
 - [Getting Started Guide](GETTING_STARTED.md) - Detailed setup instructions
 - [API Documentation](API.md) - Complete API reference
+- [Forgot Password Feature](FORGOT_PASSWORD_IMPLEMENTATION.md) - Password reset via email
+- [Forgot Password Setup](FORGOT_PASSWORD_SETUP.md) - Quick start guide
+- [Forgot Password Architecture](FORGOT_PASSWORD_ARCHITECTURE.md) - System design diagrams
+- [Deployment Checklist](FORGOT_PASSWORD_DEPLOYMENT.md) - Production deployment guide
 
 ## License
 
