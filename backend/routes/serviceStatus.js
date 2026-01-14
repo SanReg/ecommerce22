@@ -10,12 +10,13 @@ router.get('/status', authMiddleware, async (req, res) => {
     
     // If no status exists, create one with default (online)
     if (!status) {
-      status = new ServiceStatus({ isOnline: true });
+      status = new ServiceStatus({ isOnline: true, message: '' });
       await status.save();
     }
     
     res.json({
       isOnline: status.isOnline,
+      message: status.message || '',
       updatedAt: status.updatedAt
     });
   } catch (error) {
@@ -27,7 +28,7 @@ router.get('/status', authMiddleware, async (req, res) => {
 // Update service status (admin only)
 router.put('/status', authMiddleware, adminMiddleware, async (req, res) => {
   try {
-    const { isOnline } = req.body;
+    const { isOnline, message } = req.body;
 
     if (typeof isOnline !== 'boolean') {
       return res.status(400).json({ message: 'isOnline must be a boolean value' });
@@ -38,11 +39,13 @@ router.put('/status', authMiddleware, adminMiddleware, async (req, res) => {
     if (!status) {
       status = new ServiceStatus({
         isOnline,
+        message: message || '',
         updatedBy: req.userId,
         updatedAt: Date.now()
       });
     } else {
       status.isOnline = isOnline;
+      status.message = message || '';
       status.updatedBy = req.userId;
       status.updatedAt = Date.now();
     }
@@ -52,6 +55,7 @@ router.put('/status', authMiddleware, adminMiddleware, async (req, res) => {
     res.json({
       message: 'Service status updated successfully',
       isOnline: status.isOnline,
+      customMessage: status.message,
       updatedAt: status.updatedAt
     });
   } catch (error) {

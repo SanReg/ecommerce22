@@ -246,7 +246,7 @@
     <div id="status" class="tab-content">
       <h2>Service Status Control</h2>
       <p style="color: #666; margin-bottom: 1.5rem;">
-        Toggle service status to show online/offline notice to all users.
+        Toggle service status and add a custom message to show to all users.
       </p>
       <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 600px;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
@@ -261,6 +261,13 @@
             </label>
           </div>
         </div>
+        
+        <div style="margin-top: 1.5rem;">
+          <label for="statusMessage" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #1a1a1a;">Custom Message (optional)</label>
+          <textarea id="statusMessage" placeholder="Enter a custom message for users..." style="width: 100%; min-height: 100px; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-family: inherit; font-size: 0.95rem; resize: vertical;"></textarea>
+          <button onclick="updateServiceStatus()" style="margin-top: 1rem; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; font-size: 1rem;">Update Message</button>
+        </div>
+        
         <div id="statusPreview" style="padding: 1rem; border-radius: 8px; margin-top: 1rem;"></div>
       </div>
     </div>

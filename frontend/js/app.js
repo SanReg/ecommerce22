@@ -876,14 +876,14 @@ async function checkServiceStatus() {
     const data = await response.json();
     
     if (response.ok) {
-      displayServiceStatusNotice(data.isOnline);
+      displayServiceStatusNotice(data.isOnline, data.message || '');
     }
   } catch (error) {
     console.error('Error checking service status:', error);
   }
 }
 
-function displayServiceStatusNotice(isOnline) {
+function displayServiceStatusNotice(isOnline, customMessage = '') {
   const notice = document.getElementById('serviceStatusNotice');
   
   if (!notice) return;
@@ -891,13 +891,15 @@ function displayServiceStatusNotice(isOnline) {
   notice.style.display = 'block';
   
   if (isOnline) {
-    notice.innerHTML = '<img src="https://cdn.discordapp.com/emojis/1437360640409866240.gif" alt="Online" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 10px;">All services are online.';
+    const message = customMessage ? `All services are online. ${customMessage}` : 'All services are online.';
+    notice.innerHTML = '<img src="https://cdn.discordapp.com/emojis/1437360640409866240.gif" alt="Online" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 10px;">' + message;
     notice.style.background = 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.2) 100%)';
     notice.style.color = '#10b981';
     notice.style.borderColor = 'rgba(16, 185, 129, 0.4)';
     notice.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.2)';
   } else {
-    notice.innerHTML = '<img src="https://cdn.discordapp.com/emojis/1043080375649447936.gif" alt="Offline" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 10px;">We are currently offline. Please wait until we are back in a few hours.';
+    const message = customMessage ? `We are currently offline. ${customMessage}` : 'We are currently offline. Please wait until we are back in a few hours.';
+    notice.innerHTML = '<img src="https://cdn.discordapp.com/emojis/1043080375649447936.gif" alt="Offline" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 10px;">' + message;
     notice.style.background = 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.2) 100%)';
     notice.style.color = '#ef4444';
     notice.style.borderColor = 'rgba(239, 68, 68, 0.4)';

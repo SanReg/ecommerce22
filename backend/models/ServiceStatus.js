@@ -5,6 +5,10 @@ const serviceStatusSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  message: {
+    type: String,
+    default: ''
+  },
   updatedAt: {
     type: Date,
     default: Date.now

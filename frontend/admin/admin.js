@@ -1409,20 +1409,25 @@ async function loadServiceStatus() {
     const data = await response.json();
     
     if (response.ok) {
-      updateStatusToggle(data.isOnline);
+      updateStatusToggle(data.isOnline, data.message || '');
     }
   } catch (error) {
     console.error('Error loading service status:', error);
   }
 }
 
-function updateStatusToggle(isOnline) {
+function updateStatusToggle(isOnline, customMessage = '') {
   const toggle = document.getElementById('statusToggle');
   const statusText = document.getElementById('currentStatusText');
   const preview = document.getElementById('statusPreview');
+  const messageInput = document.getElementById('statusMessage');
   
   if (toggle) {
     toggle.checked = isOnline;
+  }
+  
+  if (messageInput) {
+    messageInput.value = customMessage;
   }
   
   if (statusText) {
@@ -1437,12 +1442,14 @@ function updateStatusToggle(isOnline) {
   
   if (preview) {
     if (isOnline) {
-      preview.innerHTML = '<img src="https://cdn.discordapp.com/emojis/1437360640409866240.gif" alt="Online" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px;">All services are online.';
+      const onlineMsg = customMessage ? `All services are online. ${customMessage}` : 'All services are online.';
+      preview.innerHTML = '<img src="https://cdn.discordapp.com/emojis/1437360640409866240.gif" alt="Online" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px;">' + onlineMsg;
       preview.style.background = 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.15) 100%)';
       preview.style.color = '#10b981';
       preview.style.border = '2px solid rgba(16, 185, 129, 0.3)';
     } else {
-      preview.innerHTML = '<img src="https://cdn.discordapp.com/emojis/1043080375649447936.gif" alt="Offline" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px;">We are currently offline. Please wait until we are back in a few hours.';
+      const offlineMsg = customMessage ? `We are currently offline. ${customMessage}` : 'We are currently offline. Please wait until we are back in a few hours.';
+      preview.innerHTML = '<img src="https://cdn.discordapp.com/emojis/1043080375649447936.gif" alt="Offline" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px;">' + offlineMsg;
       preview.style.background = 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.15) 100%)';
       preview.style.color = '#ef4444';
       preview.style.border = '2px solid rgba(239, 68, 68, 0.3)';
@@ -1451,6 +1458,19 @@ function updateStatusToggle(isOnline) {
 }
 
 async function toggleServiceStatus(isOnline) {
+  const message = document.getElementById('statusMessage').value;
+  await updateServiceStatusAPI(isOnline, message);
+}
+
+async function updateServiceStatus() {
+  const toggle = document.getElementById('statusToggle');
+  const message = document.getElementById('statusMessage').value;
+  const isOnline = toggle.checked;
+  
+  await updateServiceStatusAPI(isOnline, message);
+}
+
+async function updateServiceStatusAPI(isOnline, message) {
   try {
     const response = await fetch('/api/service/status', {
       method: 'PUT',
@@ -1458,14 +1478,14 @@ async function toggleServiceStatus(isOnline) {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ isOnline })
+      body: JSON.stringify({ isOnline, message })
     });
 
     const data = await response.json();
     
     if (response.ok) {
       showMessage(data.message, 'success');
-      updateStatusToggle(isOnline);
+      updateStatusToggle(isOnline, message);
     } else {
       showMessage(data.message || 'Could not update status', 'error');
       // Revert toggle on error
@@ -1485,7 +1505,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const toggle = document.getElementById('statusToggle');
   if (toggle) {
     toggle.addEventListener('change', (e) => {
-      toggleServiceStatus(e.target.checked);
+      const message = document.getElementById('statusMessage').value;
+      updateServiceStatusAPI(e.target.checked, message);
     });
   }
 });
