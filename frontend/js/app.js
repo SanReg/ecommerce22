@@ -377,6 +377,14 @@ function displayUserOrders(orders) {
     const date = orderDateTime.toLocaleDateString();
     const time = orderDateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
+    // Calculate ETA (20 minutes from creation)
+    const createdTime = new Date(order.createdAt).getTime();
+    const eta = createdTime + (20 * 60 * 1000);
+    const now = new Date().getTime();
+    const remainingMs = eta - now;
+    const remainingMins = Math.floor(Math.max(0, remainingMs) / 60000);
+    const remainingSecs = Math.floor((Math.max(0, remainingMs) % 60000) / 1000);
+    
     // User file link
     const userFileUrl = order.userFile && (order.userFile.url || order.userFile.secure_url || order.userFile.path);
     const userFileName = order.userFile && order.userFile.filename ? order.userFile.filename : 'No file';
@@ -404,7 +412,7 @@ function displayUserOrders(orders) {
             <h3 style="color: #1f2937; font-size: 1.1rem; margin: 0 0 0.3rem 0; font-weight: 700;">${order.book.title}</h3>
             <code style="background: #f0f0f0; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; color: #666;">${order._id.substring(0, 12)}...</code>
           </div>
-          <span class="status-badge ${statusClass}" style="font-size: 0.85rem; padding: 0.4rem 0.8rem;">${order.status}</span>
+          <span class="status-badge ${statusClass}" style="font-size: 0.85rem; padding: 0.4rem 0.8rem; display: flex; align-items: center; gap: 0.4rem; background: ${order.status === 'failed' ? '#ef4444' : (order.status === 'completed' ? '#10b981' : '#f59e0b')}; color: #ffffff; border-radius: 6px;">${order.status === 'pending' ? `<img src="https://cdn.discordapp.com/emojis/1240447270634389568.gif" alt="processing" style="width: 20px; height: 20px;">processing` : order.status}</span>
         </div>
 
         <!-- Price and Date -->
@@ -445,15 +453,78 @@ function displayUserOrders(orders) {
           </div>
         ` : `
           <div style="padding: 1rem; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; color: #92400e;">
-            <p style="margin: 0; font-size: 0.9rem; font-weight: 500;">⏳ Reports pending - Admin will upload soon</p>
+            <p style="margin: 0; font-size: 0.9rem; font-weight: 500;">⏳ ETA: <strong id="countdown-${order._id}" data-order-id="${order._id}" data-created-at="${order.createdAt}">${remainingMins} min${remainingMins !== 1 ? 's' : ''} ${remainingSecs} sec${remainingSecs !== 1 ? 's' : ''}</strong></p>
           </div>
-        `)}
-      </div>
+        `)}      </div>
     `;
   });
 
   html += '</div>';
   container.innerHTML = html;
+  
+  // Initialize countdown timers for all orders
+  initializeCountdownTimers();
+}
+
+// Store active countdown timers
+let activeCountdowns = {};
+
+function initializeCountdownTimers() {
+  // Clear all existing countdowns
+  Object.values(activeCountdowns).forEach(timeoutId => clearTimeout(timeoutId));
+  activeCountdowns = {};
+  
+  const countdowns = document.querySelectorAll('[id^="countdown-"]');
+  countdowns.forEach(el => {
+    const createdAt = el.getAttribute('data-created-at');
+    const orderId = el.getAttribute('data-order-id');
+    
+    if (!createdAt || !orderId) return;
+    
+    const createdTime = new Date(createdAt).getTime();
+    const eta = createdTime + (20 * 60 * 1000);
+    
+    function updateCountdown() {
+      const now = new Date().getTime();
+      const remainingMs = eta - now;
+      const remainingMins = Math.floor(Math.max(0, remainingMs) / 60000);
+      const remainingSecs = Math.floor((Math.max(0, remainingMs) % 60000) / 1000);
+      const element = document.getElementById('countdown-' + orderId);
+      
+      // Stop if element no longer exists in DOM
+      if (!element) {
+        if (activeCountdowns[orderId]) {
+          clearTimeout(activeCountdowns[orderId]);
+          delete activeCountdowns[orderId];
+        }
+        return;
+      }
+      
+      if (remainingMs <= 0) {
+        // Time expired - show error message
+        const parentDiv = element.closest('div');
+        if (parentDiv) {
+          parentDiv.style.background = '#fee2e2';
+          parentDiv.style.borderColor = '#fca5a5';
+          parentDiv.style.color = '#7f1d1d';
+        }
+        element.textContent = 'The server is offline or there is a problem, contact support!';
+        element.style.color = '#7f1d1d';
+        element.style.fontWeight = '600';
+        delete activeCountdowns[orderId];
+        
+        // Refresh orders after a short delay
+        setTimeout(() => {
+          loadUserOrders();
+        }, 500);
+      } else {
+        element.textContent = remainingMins + ' min' + (remainingMins !== 1 ? 's' : '') + ' ' + remainingSecs + ' sec' + (remainingSecs !== 1 ? 's' : '');
+        activeCountdowns[orderId] = setTimeout(updateCountdown, 1000);
+      }
+    }
+    
+    updateCountdown();
+  });
 }
 
 // Load packages from API
