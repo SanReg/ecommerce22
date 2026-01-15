@@ -1285,6 +1285,7 @@ function displayCodes(codes) {
     const statusColor = code.isUsed ? '#ef4444' : '#10b981';
     const statusBgColor = code.isUsed ? '#fee2e2' : '#dcfce7';
     const usedBy = code.usedBy ? (code.usedBy.email || code.usedBy.username || 'User') : '—';
+    const createdByUser = code.createdBy ? (code.createdBy.email || code.createdBy.username || 'Admin') : '—';
 
     html += `
       <div style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border: 2px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.08);">
@@ -1318,6 +1319,10 @@ function displayCodes(codes) {
               <span>${usedAt} at ${usedAtTime}</span>
             </div>
           ` : ''}
+          <div>
+            <span style="font-weight: 600; color: #1a202c;">💼 Created By:</span>
+            <span>${createdByUser}</span>
+          </div>
           <div>
             <span style="font-weight: 600; color: #1a202c;">📅 Created:</span>
             <span>${created} at ${createdTime}</span>

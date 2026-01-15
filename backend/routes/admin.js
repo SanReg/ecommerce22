@@ -191,6 +191,7 @@ router.get('/codes', authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const codes = await RedemptionCode.find()
       .populate('usedBy', 'email username')
+      .populate('createdBy', 'email username')
       .sort({ createdAt: -1 });
 
     res.json(codes);
@@ -234,7 +235,8 @@ router.post('/codes', authMiddleware, adminMiddleware, async (req, res) => {
       checks: value,
       isUsed: false,
       usedBy: null,
-      usedAt: null
+      usedAt: null,
+      createdBy: req.userId
     });
 
     await newCode.save();
