@@ -453,7 +453,7 @@ function displayUserOrders(orders) {
           </div>
         ` : `
           <div style="padding: 1rem; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; color: #92400e;">
-            <p style="margin: 0; font-size: 0.9rem; font-weight: 500;">⏳ ETA: <strong id="countdown-${order._id}" data-order-id="${order._id}" data-created-at="${order.createdAt}">${remainingMins} min${remainingMins !== 1 ? 's' : ''} ${remainingSecs} sec${remainingSecs !== 1 ? 's' : ''}</strong></p>
+            <p style="margin: 0; font-size: 0.9rem; font-weight: 500;"><img src="https://media.discordapp.net/stickers/1461336117243543614.png" alt="clock" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 4px;"> ETA: <strong id="countdown-${order._id}" data-order-id="${order._id}" data-created-at="${order.createdAt}">${remainingMins} min${remainingMins !== 1 ? 's' : ''} ${remainingSecs} sec${remainingSecs !== 1 ? 's' : ''}</strong></p>
           </div>
         `)}      </div>
     `;
@@ -508,15 +508,10 @@ function initializeCountdownTimers() {
           parentDiv.style.borderColor = '#fca5a5';
           parentDiv.style.color = '#7f1d1d';
         }
-        element.textContent = 'The server is offline or there is a problem, contact support!';
+        element.textContent = 'Please refresh the page! If it still persists either the server is offline or there is a problem, contact support!';
         element.style.color = '#7f1d1d';
         element.style.fontWeight = '600';
         delete activeCountdowns[orderId];
-        
-        // Refresh orders after a short delay
-        setTimeout(() => {
-          loadUserOrders();
-        }, 500);
       } else {
         element.textContent = remainingMins + ' min' + (remainingMins !== 1 ? 's' : '') + ' ' + remainingSecs + ' sec' + (remainingSecs !== 1 ? 's' : '');
         activeCountdowns[orderId] = setTimeout(updateCountdown, 1000);
