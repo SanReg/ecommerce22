@@ -379,7 +379,7 @@ function displayUserOrders(orders) {
     
     // Calculate ETA (20 minutes from creation)
     const createdTime = new Date(order.createdAt).getTime();
-    const eta = createdTime + (20 * 60 * 1000);
+    const eta = createdTime + (11 * 60 * 1000);
     const now = new Date().getTime();
     const remainingMs = eta - now;
     const remainingMins = Math.floor(Math.max(0, remainingMs) / 60000);
@@ -482,7 +482,7 @@ function initializeCountdownTimers() {
     if (!createdAt || !orderId) return;
     
     const createdTime = new Date(createdAt).getTime();
-    const eta = createdTime + (20 * 60 * 1000);
+    const eta = createdTime + (11 * 60 * 1000);
     
     function updateCountdown() {
       const now = new Date().getTime();
