@@ -463,10 +463,52 @@ function displayAllOrders(orders) {
         </div>
 
         <!-- Download Links -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.6rem;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.6rem; margin-bottom: 1rem;">
           ${userFileUrl ? `<a href="${userFileUrl}" target="_blank" class="btn-secondary" download style="padding: 0.5rem 0.8rem; font-size: 0.8rem; border-radius: 6px; text-align: center; text-decoration: none;">📥 User File</a>` : '<div style="opacity: 0.5; cursor: not-allowed;">📥 User File</div>'}
           ${aiReportUrl ? `<a href="${aiReportUrl}" target="_blank" class="btn-secondary" download style="padding: 0.5rem 0.8rem; font-size: 0.8rem; border-radius: 6px; text-align: center; text-decoration: none;">📊 AI Report</a>` : '<div style="opacity: 0.5; cursor: not-allowed;">📊 AI Report</div>'}
           ${similarityUrl ? `<a href="${similarityUrl}" target="_blank" class="btn-secondary" download style="padding: 0.5rem 0.8rem; font-size: 0.8rem; border-radius: 6px; text-align: center; text-decoration: none;">🔍 Similarity</a>` : '<div style="opacity: 0.5; cursor: not-allowed;">🔍 Similarity</div>'}
+        </div>
+
+        <!-- Inline File Upload Section -->
+        <div id="upload-container-${order._id}" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(6, 182, 212, 0.08) 100%); border: 2px solid rgba(99, 102, 241, 0.3); border-radius: 12px; padding: 0; transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease, border-color 0.3s ease, background 0.3s ease; max-height: 0; overflow: hidden; display: none;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <!-- AI Report Upload -->
+            <div class="ai-report-wrapper-${order._id}" style="border: 2px dashed rgba(99, 102, 241, 0.5); border-radius: 8px; padding: 1rem; text-align: center; cursor: pointer; transition: all 0.3s ease; background: rgba(243, 244, 246, 0.6);" onmouseover="this.style.borderColor='#4f46e5'; this.style.background='rgba(99, 102, 241, 0.08)';" onmouseout="this.style.borderColor='rgba(99, 102, 241, 0.5)'; this.style.background='rgba(243, 244, 246, 0.6)';">
+              <input type="file" class="ai-report-input" accept=".pdf,.doc,.docx,.txt,.xlsx,.csv" style="display: none;" onchange="updateFileLabel(this)">
+              <div style="pointer-events: none;">
+                <span style="font-size: 1.5rem; display: block; margin-bottom: 0.4rem;">📊</span>
+                <p style="margin: 0 0 0.3rem 0; font-weight: 700; color: #1f2937; font-size: 0.9rem;">AI Report</p>
+                <p style="margin: 0; font-size: 0.8rem; color: #4b5563;">PDF, DOC, XLSX, etc.</p>
+                <p style="margin: 0.4rem 0 0 0; font-size: 0.75rem; color: #6b7280;">Click or drag file</p>
+              </div>
+            </div>
+
+            <!-- Similarity Report Upload -->
+            <div class="similarity-report-wrapper-${order._id}" style="border: 2px dashed rgba(6, 182, 212, 0.5); border-radius: 8px; padding: 1rem; text-align: center; cursor: pointer; transition: all 0.3s ease; background: rgba(243, 244, 246, 0.6);" onmouseover="this.style.borderColor='#0891b2'; this.style.background='rgba(6, 182, 212, 0.08)';" onmouseout="this.style.borderColor='rgba(6, 182, 212, 0.5)'; this.style.background='rgba(243, 244, 246, 0.6)';">
+              <input type="file" class="similarity-report-input" accept=".pdf,.doc,.docx,.txt,.xlsx,.csv" style="display: none;" onchange="updateFileLabel(this)">
+              <div style="pointer-events: none;">
+                <span style="font-size: 1.5rem; display: block; margin-bottom: 0.4rem;">🔍</span>
+                <p style="margin: 0 0 0.3rem 0; font-weight: 700; color: #1f2937; font-size: 0.9rem;">Similarity Report</p>
+                <p style="margin: 0; font-size: 0.8rem; color: #4b5563;">PDF, DOC, XLSX, etc.</p>
+                <p style="margin: 0.4rem 0 0 0; font-size: 0.75rem; color: #6b7280;">Click or drag file</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Upload Progress -->
+          <div class="upload-progress-${order._id}" style="display: none; margin-bottom: 1rem; background: rgba(99, 102, 241, 0.1); padding: 0.8rem; border-radius: 8px; border: 1px solid rgba(99, 102, 241, 0.2);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <span style="font-size: 0.9rem; font-weight: 600; color: #1f2937;">Uploading...</span>
+              <span class="upload-progress-text-${order._id}" style="font-size: 0.9rem; font-weight: 700; color: #4f46e5;">0%</span>
+            </div>
+            <progress class="upload-progress-bar-${order._id}" value="0" max="100" style="width: 100%; height: 6px; border-radius: 3px; border: none; background: rgba(99, 102, 241, 0.15); accent-color: #6366f1; -webkit-appearance: none; appearance: none;"></progress>
+          </div>
+
+          <!-- Upload Buttons -->
+          <div style="display: flex; gap: 0.8rem; justify-content: flex-end;">
+            <button onclick="closeFileUploadModal('${order._id}')" style="padding: 0.7rem 1.2rem; font-size: 0.9rem; border-radius: 8px; background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%); color: #1f2937; border: 1px solid #d1d5db; cursor: pointer; font-weight: 600; transition: all 0.2s ease;" onmouseover="this.style.background='linear-gradient(135deg, #d1d5db 0%, #bfdbfe 100%)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%)'; this.style.transform='translateY(0)';">Cancel</button>
+            <button class="upload-btn-${order._id}" onclick="uploadOrderFiles('${order._id}', event)" style="padding: 0.7rem 1.2rem; font-size: 0.9rem; border-radius: 8px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; cursor: pointer; font-weight: 600; transition: all 0.2s ease;" onmouseover="this.style.background='linear-gradient(135deg, #059669 0%, #047857 100%)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='linear-gradient(135deg, #10b981 0%, #059669 100%)'; this.style.transform='translateY(0)';">📤 Upload Files</button>
+          </div>
         </div>
       </div>
     `;
@@ -474,6 +516,9 @@ function displayAllOrders(orders) {
 
   html += '</div>';
   container.innerHTML = html;
+
+  // Setup drag and drop for all upload inputs
+  setupDragAndDrop();
 }
 
 async function loadTicketsAdmin() {
@@ -1118,51 +1163,39 @@ async function changeUserPassword(userId) {
 }
 
 function openFileUploadModal(orderId) {
-  const modal = `
-    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 2000;">
-      <div style="background: white; border-radius: 10px; padding: 2rem; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto;">
-        <h2>Upload Report Files for Order</h2>
-        <p style="color: #666; margin-bottom: 1.5rem;">Upload AI Report and/or Similarity Report files (at least one required)</p>
-        
-        <div class="form-group">
-          <label for="aiReportFile" style="font-weight: 600; color: #333;">📊 AI Report File:</label>
-          <input type="file" id="aiReportFile" accept=".pdf,.doc,.docx,.txt,.xlsx,.csv">
-          <small style="color: #999;">Optional: AI analysis report for this submission</small>
-        </div>
+  const uploadContainer = document.getElementById(`upload-container-${orderId}`);
+  console.log('Opening upload modal for order:', orderId, uploadContainer);
+  if (uploadContainer) {
+    uploadContainer.style.display = 'block';
+    uploadContainer.style.maxHeight = '1000px';
+    uploadContainer.style.padding = '1.2rem';
+    uploadContainer.style.overflow = 'visible';
+    uploadContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
 
-        <div class="form-group">
-          <label for="similarityReportFile" style="font-weight: 600; color: #333;">🔍 Similarity Report File:</label>
-          <input type="file" id="similarityReportFile" accept=".pdf,.doc,.docx,.txt,.xlsx,.csv">
-          <small style="color: #999;">Optional: Plagiarism/similarity check report</small>
-        </div>
-
-        <div id="adminUploadProgress" style="display: none; margin-bottom: 1rem;">
-          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-            <span style="font-size: 0.9rem; font-weight: bold;">Uploading...</span>
-            <span id="adminUploadProgressText" style="font-size: 0.9rem;">0%</span>
-          </div>
-          <progress id="adminUploadProgressBar" value="0" max="100" style="width: 100%; height: 8px; border-radius: 4px;"></progress>
-        </div>
-        
-        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
-          <button class="btn-secondary" id="adminCancelBtn" onclick="this.closest('div').parentElement.remove()">Cancel</button>
-          <button class="btn-success" id="adminUploadBtn" onclick="uploadOrderFiles('${orderId}', event)">Upload Reports</button>
-        </div>
-      </div>
-    </div>
-  `;
-
-  document.body.insertAdjacentHTML('beforeend', modal);
+function closeFileUploadModal(orderId) {
+  const uploadContainer = document.getElementById(`upload-container-${orderId}`);
+  if (uploadContainer) {
+    uploadContainer.style.maxHeight = '0';
+    uploadContainer.style.padding = '0';
+    uploadContainer.style.overflow = 'hidden';
+    uploadContainer.style.display = 'none';
+  }
 }
 
 async function uploadOrderFiles(orderId, event) {
-  const aiReportInput = event.target.parentElement.parentElement.querySelector('#aiReportFile');
-  const similarityReportInput = event.target.parentElement.parentElement.querySelector('#similarityReportFile');
-  const uploadBtn = event.target.parentElement.querySelector('#adminUploadBtn');
-  const cancelBtn = event.target.parentElement.querySelector('#adminCancelBtn');
-  const progressDiv = event.target.parentElement.parentElement.querySelector('#adminUploadProgress');
-  const progressBar = event.target.parentElement.parentElement.querySelector('#adminUploadProgressBar');
-  const progressText = event.target.parentElement.parentElement.querySelector('#adminUploadProgressText');
+  event.preventDefault();
+  
+  const uploadContainer = document.getElementById(`upload-container-${orderId}`);
+  if (!uploadContainer) return;
+  
+  const aiReportInput = uploadContainer.querySelector('.ai-report-input');
+  const similarityReportInput = uploadContainer.querySelector('.similarity-report-input');
+  const uploadBtn = uploadContainer.querySelector(`.upload-btn-${orderId}`);
+  const progressDiv = uploadContainer.querySelector(`.upload-progress-${orderId}`);
+  const progressBar = uploadContainer.querySelector(`.upload-progress-bar-${orderId}`);
+  const progressText = uploadContainer.querySelector(`.upload-progress-text-${orderId}`);
   
   // Check if at least one file is selected
   if (!aiReportInput.files.length && !similarityReportInput.files.length) {
@@ -1170,9 +1203,8 @@ async function uploadOrderFiles(orderId, event) {
     return;
   }
 
-  // Disable buttons during upload
+  // Disable button during upload
   uploadBtn.disabled = true;
-  cancelBtn.disabled = true;
   progressDiv.style.display = 'block';
   progressBar.value = 0;
   progressText.textContent = '0%';
@@ -1212,20 +1244,24 @@ async function uploadOrderFiles(orderId, event) {
     if (response.ok) {
       showMessage(data.message, 'success');
       setTimeout(() => {
-        event.target.closest('div').parentElement.remove();
+        uploadContainer.style.maxHeight = '0';
+        uploadContainer.style.padding = '0';
+        uploadContainer.style.display = 'none';
+        aiReportInput.value = '';
+        similarityReportInput.value = '';
+        progressDiv.style.display = 'none';
+        uploadBtn.disabled = false;
         loadAllOrders();
       }, 500);
     } else {
       showMessage(data.message, 'error');
       progressDiv.style.display = 'none';
       uploadBtn.disabled = false;
-      cancelBtn.disabled = false;
     }
   } catch (error) {
     showMessage('Error uploading files: ' + error.message, 'error');
     progressDiv.style.display = 'none';
     uploadBtn.disabled = false;
-    cancelBtn.disabled = false;
   }
 }
 
@@ -1384,6 +1420,105 @@ async function createRedemptionCode(event) {
     }
   } catch (error) {
     showMessage('Error creating code: ' + error.message, 'error');
+  }
+}
+
+// Drag and Drop for file uploads
+function setupDragAndDrop() {
+  console.log('Setting up drag and drop...');
+  
+  // Setup AI Report wrappers
+  const aiWrappers = document.querySelectorAll('[class*="ai-report-wrapper-"]');
+  console.log('Found AI report wrappers:', aiWrappers.length);
+  aiWrappers.forEach(wrapper => setupWrapperDragDrop(wrapper));
+  
+  // Setup Similarity Report wrappers
+  const simWrappers = document.querySelectorAll('[class*="similarity-report-wrapper-"]');
+  console.log('Found Similarity report wrappers:', simWrappers.length);
+  simWrappers.forEach(wrapper => setupWrapperDragDrop(wrapper));
+}
+
+function setupWrapperDragDrop(wrapper) {
+  const input = wrapper.querySelector('input[type="file"]');
+  if (!input) {
+    console.log('No file input found in wrapper:', wrapper.className);
+    return;
+  }
+  
+  console.log('Setting up wrapper:', wrapper.className);
+  
+  // Click to open file dialog
+  wrapper.addEventListener('click', (e) => {
+    if (e.target === wrapper || e.target.closest('div')) {
+      console.log('Clicking to open file dialog');
+      input.click();
+    }
+  });
+  
+  // Drag over effect
+  wrapper.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const isAI = input.classList.contains('ai-report-input');
+    wrapper.style.borderColor = isAI ? '#6366f1' : '#0891b2';
+    wrapper.style.background = isAI ? 'rgba(99, 102, 241, 0.15)' : 'rgba(6, 182, 212, 0.15)';
+  });
+  
+  wrapper.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const isAI = input.classList.contains('ai-report-input');
+    wrapper.style.borderColor = isAI ? 'rgba(99, 102, 241, 0.5)' : 'rgba(6, 182, 212, 0.5)';
+    wrapper.style.background = 'rgba(243, 244, 246, 0.6)';
+  });
+  
+  // Drop files
+  wrapper.addEventListener('drop', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const isAI = input.classList.contains('ai-report-input');
+    wrapper.style.borderColor = isAI ? 'rgba(99, 102, 241, 0.5)' : 'rgba(6, 182, 212, 0.5)';
+    wrapper.style.background = 'rgba(243, 244, 246, 0.6)';
+    
+    if (e.dataTransfer.files.length) {
+      console.log('Files dropped:', e.dataTransfer.files[0].name);
+      input.files = e.dataTransfer.files;
+      updateFileLabel(input);
+    }
+  });
+}
+
+function updateFileLabel(input) {
+  console.log('Updating file label for input:', input.className, 'Files:', input.files.length);
+  
+  const wrapper = input.closest('div[class*="report-wrapper-"]');
+  if (!wrapper) {
+    console.log('Could not find wrapper for input');
+    return;
+  }
+  
+  const textDiv = wrapper.querySelector('div');
+  if (!textDiv) {
+    console.log('Could not find text div in wrapper');
+    return;
+  }
+  
+  if (input.files.length > 0) {
+    const file = input.files[0];
+    const fileName = file.name;
+    const fileSize = (file.size / 1024 / 1024).toFixed(2);
+    
+    console.log('File selected:', fileName, fileSize, 'MB');
+    
+    textDiv.style.pointerEvents = 'none';
+    textDiv.innerHTML = `
+      <span style="font-size: 1.5rem; display: block; margin-bottom: 0.4rem;">✓</span>
+      <p style="margin: 0 0 0.3rem 0; font-weight: 700; color: #059669; font-size: 0.9rem;">File Selected</p>
+      <p style="margin: 0; font-size: 0.8rem; color: #1f2937; word-break: break-all;">${fileName}</p>
+      <p style="margin: 0.2rem 0 0 0; font-size: 0.75rem; color: #6b7280;">${fileSize} MB</p>
+    `;
+  } else {
+    console.log('No files selected');
   }
 }
 

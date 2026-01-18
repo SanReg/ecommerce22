@@ -17,6 +17,14 @@
       padding: 4rem 1.5rem 2rem;
       margin-top: 5rem;
       backdrop-filter: blur(10px);
+      margin-left: 280px;
+      transition: margin-left 0.3s ease-out;
+    }
+    
+    @media (max-width: 768px) {
+      .footer {
+        margin-left: 0;
+      }
     }
 
     .footer-content {
@@ -186,10 +194,7 @@
 </head>
 <body>
   <header>
-    <a href="https://checkmypaper.net" class="logo-link" style="display: flex; align-items: center; gap: 1rem; text-decoration: none; color: inherit;">
-      <img src="/uploads/logo.png" alt="CheckMyPaper logo" class="logo-img" style="height: 40px; width: auto;">
-      <h1 class="logo-text" style="margin: 0;">CheckMyPaper</h1>
-    </a>
+    <div class="header-spacer"></div>
     <div class="user-info">
       <div class="checks-display" style="background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%); box-shadow: 0 8px 32px rgba(99, 102, 241, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2);">
         <span class="checks-icon">💎</span>
@@ -200,21 +205,99 @@
     </div>
   </header>
 
-  <div class="container">
+  <!-- Main Layout Wrapper -->
+  <div class="main-wrapper">
+    <!-- Sidebar Navigation (Desktop) -->
+    <aside class="sidebar-nav">
+      <!-- Logo Section -->
+      <a href="https://checkmypaper.net" class="sidebar-brand" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: inherit; margin-bottom: 0.5rem;">
+        <img src="/uploads/logo.png" alt="CheckMyPaper logo" class="sidebar-logo" style="height: 50px; width: auto;">
+        <div class="brand-text">
+          <h2 style="margin: 0; font-size: 1.2rem; font-weight: 700; background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: -0.5px;">CheckMyPaper</h2>
+          <p style="margin: 0; font-size: 0.7rem; color: var(--text-muted); font-weight: 500;">Pro Tools</p>
+        </div>
+      </a>
+      
+      <div class="sidebar-divider"></div>
+      
+      <nav class="nav-menu">
+        <button class="nav-item active" data-tab="browse">
+          <span class="nav-icon">📚</span>
+          <span class="nav-label">Services</span>
+          <span class="nav-badge"></span>
+        </button>
+        <button class="nav-item" data-tab="redeem">
+          <span class="nav-icon">💎</span>
+          <span class="nav-label">Redeem</span>
+          <span class="nav-badge"></span>
+        </button>
+        <button class="nav-item" data-tab="buy">
+          <span class="nav-icon">🛍️</span>
+          <span class="nav-label">Buy Credits</span>
+          <span class="nav-badge"></span>
+        </button>
+        <button class="nav-item" data-tab="orders">
+          <span class="nav-icon">📋</span>
+          <span class="nav-label">Orders</span>
+          <span class="nav-badge" id="ordersBadge"></span>
+        </button>
+        <button class="nav-item" data-tab="settings">
+          <span class="nav-icon">⚙️</span>
+          <span class="nav-label">Settings</span>
+          <span class="nav-badge"></span>
+        </button>
+      </nav>
+      
+      <!-- Quick Stats in Sidebar -->
+      <div class="sidebar-stats">
+        <div class="stat-item">
+          <span class="stat-icon">💎</span>
+          <div class="stat-info">
+            <span class="stat-label">Credits</span>
+            <span class="stat-value" id="sidebarChecks">0</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+      <div class="container">
     <div id="message" class="message"></div>
 
     <!-- Unlimited Status Notice -->
-    <div id="unlimitedStatusNotice" style="display: none; padding: 1.2rem 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.2) 100%); border: 2px solid rgba(16, 185, 129, 0.4); color: #10b981; font-weight: 600; text-align: center; backdrop-filter: blur(10px);"></div>
+    <div id="unlimitedStatusNotice" class="status-notice unlimited-notice" style="display: none;"></div>
 
     <!-- Service Status Notice -->
-    <div id="serviceStatusNotice" style="display: none; padding: 1rem 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; font-size: 1rem; font-weight: 600; text-align: center; backdrop-filter: blur(10px); border: 2px solid;"></div>
+    <div id="serviceStatusNotice" class="status-notice" style="display: none;"></div>
 
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="browse">📚 Services</button>
-      <button class="tab-btn" data-tab="redeem">💎 Redeem Credits</button>
-      <button class="tab-btn" data-tab="buy">🛍️ Buy Credits</button>
-      <button class="tab-btn" data-tab="orders">📋 Orders</button>
-      <button class="tab-btn" data-tab="settings">⚙️ Settings</button>
+    <!-- Mobile Tab Navigation (Hidden on Desktop) -->
+    <div class="tabs-modern mobile-tabs">
+      <button class="tab-btn-modern active" data-tab="browse">
+        <span class="tab-icon">📚</span>
+        <span class="tab-label">Services</span>
+        <span class="tab-indicator"></span>
+      </button>
+      <button class="tab-btn-modern" data-tab="redeem">
+        <span class="tab-icon">💎</span>
+        <span class="tab-label">Redeem</span>
+        <span class="tab-indicator"></span>
+      </button>
+      <button class="tab-btn-modern" data-tab="buy">
+        <span class="tab-icon">🛍️</span>
+        <span class="tab-label">Buy Credits</span>
+        <span class="tab-indicator"></span>
+      </button>
+      <button class="tab-btn-modern" data-tab="orders">
+        <span class="tab-icon">📋</span>
+        <span class="tab-label">Orders</span>
+        <span class="tab-indicator"></span>
+      </button>
+      <button class="tab-btn-modern" data-tab="settings">
+        <span class="tab-icon">⚙️</span>
+        <span class="tab-label">Settings</span>
+        <span class="tab-indicator"></span>
+      </button>
     </div>
 
     <!-- Browse Services Tab -->
@@ -396,6 +479,10 @@ Accepted file types: .docx, .pdf, .doc</small>
       </div>
     </div>
   </div>
+  
+    </div><!-- End container -->
+  </div><!-- End main-content -->
+</div><!-- End main-wrapper -->
 
   <footer class="footer">
     <div class="footer-content">

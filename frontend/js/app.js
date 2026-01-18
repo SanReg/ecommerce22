@@ -69,9 +69,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function setupTabButtons() {
-  document.querySelectorAll('.tab-btn').forEach(btn => {
+  // Support sidebar navigation, mobile tabs, and old tab button classes
+  document.querySelectorAll('.tab-btn, .tab-btn-modern, .nav-item').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      const tabName = e.target.dataset.tab;
+      const tabName = e.currentTarget.dataset.tab;
       switchTab(tabName);
     });
   });
@@ -81,15 +82,21 @@ function switchTab(tabName) {
   document.querySelectorAll('.tab-content').forEach(tab => {
     tab.classList.remove('active');
   });
-  document.querySelectorAll('.tab-btn').forEach(btn => {
+  document.querySelectorAll('.tab-btn, .tab-btn-modern, .nav-item').forEach(btn => {
     btn.classList.remove('active');
   });
 
   document.getElementById(tabName).classList.add('active');
-  document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+  const activeBtns = document.querySelectorAll(`[data-tab="${tabName}"]`);
+  activeBtns.forEach(btn => btn.classList.add('active'));
 
   if (tabName === 'orders') {
     loadUserOrders();
+  }
+  
+  // Scroll to top on mobile
+  if (window.innerWidth <= 768) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
 
@@ -105,6 +112,13 @@ async function updateChecksDisplay() {
     });
     const data = await response.json();
     document.getElementById('checksAmount').textContent = data.checks;
+    
+    // Update sidebar stats if exists
+    const sidebarChecks = document.getElementById('sidebarChecks');
+    if (sidebarChecks) {
+      sidebarChecks.textContent = data.checks;
+    }
+    
     currentUser.checks = data.checks;
     currentUser.isUnlimited = data.isUnlimited;
     currentUser.unlimitedInfo = data.unlimitedInfo;
@@ -188,7 +202,7 @@ function displayServices() {
       <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">We provide similarity and AI detection reports generated through Turnitin, helping you review your work before final submission.<br><em>Files are not stored in Turnitin!<em></p>
     </div>
     <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid var(--card-border);">
-      <span style="background: linear-gradient(135deg, #a89968 0%, #8b7d5e 100%); color: white; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem;">💎 1 Credit</span>
+      <span style="background: linear-gradient(135deg, #a89968 0%, #8b7d5e 100%); color: white; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem;">Cost: 1💎</span>
       ${turnitinAvailable
         ? `<button onclick="openBuyModal('${turnitin._id}', 'TurnItIn Check', 1)" style="background: linear-gradient(135deg, var(--primary) 0%, #7c3aca 100%); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">Submit Now →</button>`
         : `<button disabled style="opacity: 0.5; cursor: not-allowed; background: #666; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: 600;">Unavailable</button>`}
