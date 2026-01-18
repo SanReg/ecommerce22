@@ -389,20 +389,20 @@ function displayUserOrders(orders) {
     const userFileUrl = order.userFile && (order.userFile.url || order.userFile.secure_url || order.userFile.path);
     const userFileName = order.userFile && order.userFile.filename ? order.userFile.filename : 'No file';
     const userFileLink = userFileUrl
-      ? `<a href="${userFileUrl}" target="_blank" rel="noopener" download style="color: #ffffff; text-decoration: none; font-weight: 600;">📥 User File</a>`
-      : '<span style="color: #999;">No file</span>';
+      ? `<a href="${userFileUrl}" target="_blank" rel="noopener" download style="display: block; padding: 0.8rem 1rem; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border-radius: 8px; text-align: center; color: #ffffff; text-decoration: none; font-weight: 600; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(99, 102, 241, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">📥 User File</a>`
+      : '<div style="padding: 0.8rem 1rem; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border-radius: 8px; text-align: center;"><span style="color: #999;">No file</span></div>';
     
     // AI Report link
     const aiReportUrl = order.adminFiles && order.adminFiles.aiReport && (order.adminFiles.aiReport.url || order.adminFiles.aiReport.secure_url);
     const aiReportLink = aiReportUrl
-      ? `<a href="${aiReportUrl}" target="_blank" rel="noopener" download style="color: #ffffff; text-decoration: none; font-weight: 600;">📊 AI Report</a>`
-      : (order.status === 'completed' ? '<span style="color: #999;">Not uploaded</span>' : '<span style="color: #f59e0b;">Pending</span>');
+      ? `<a href="${aiReportUrl}" target="_blank" rel="noopener" download style="display: block; padding: 0.8rem 1rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 8px; text-align: center; color: #ffffff; text-decoration: none; font-weight: 600; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(16, 185, 129, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">📊 AI Report</a>`
+      : `<div style="padding: 0.8rem 1rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 8px; text-align: center;"><span style="color: ${order.status === 'completed' ? '#999' : '#f59e0b'};">${order.status === 'completed' ? 'Not uploaded' : 'Pending'}</span></div>`;
     
     // Similarity Report link
     const similarityUrl = order.adminFiles && order.adminFiles.similarityReport && (order.adminFiles.similarityReport.url || order.adminFiles.similarityReport.secure_url);
     const similarityLink = similarityUrl
-      ? `<a href="${similarityUrl}" target="_blank" rel="noopener" download style="color: #ffffff; text-decoration: none; font-weight: 600;">🔍 Similarity Report</a>`
-      : (order.status === 'completed' ? '<span style="color: #999;">Not uploaded</span>' : '<span style="color: #f59e0b;">Pending</span>');
+      ? `<a href="${similarityUrl}" target="_blank" rel="noopener" download style="display: block; padding: 0.8rem 1rem; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); border-radius: 8px; text-align: center; color: #ffffff; text-decoration: none; font-weight: 600; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(6, 182, 212, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">🔍 Similarity Report</a>`
+      : `<div style="padding: 0.8rem 1rem; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); border-radius: 8px; text-align: center;"><span style="color: ${order.status === 'completed' ? '#999' : '#f59e0b'};">${order.status === 'completed' ? 'Not uploaded' : 'Pending'}</span></div>`;
 
     html += `
       <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.08); transition: all 0.3s ease;">
@@ -427,9 +427,7 @@ function displayUserOrders(orders) {
         <!-- Files Section -->
         <div style="margin-bottom: 1.2rem;">
           <p style="color: #1f2937; font-weight: 600; margin: 0 0 0.8rem 0; font-size: 0.9rem;">📄 Your Submission</p>
-          <div style="padding: 0.8rem 1rem; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border-radius: 8px; text-align: center;">
-            ${userFileLink}
-          </div>
+          ${userFileLink}
         </div>
 
         <!-- Reports / Status Section -->
@@ -437,12 +435,8 @@ function displayUserOrders(orders) {
           <div style="margin-bottom: 0;">
             <p style="color: #1f2937; font-weight: 600; margin: 0 0 0.8rem 0; font-size: 0.9rem;">📋 Admin Reports</p>
             <div style="display: grid; gap: 0.8rem;">
-              <div style="padding: 0.8rem 1rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 8px; text-align: center;">
-                ${aiReportLink}
-              </div>
-              <div style="padding: 0.8rem 1rem; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); border-radius: 8px; text-align: center;">
-                ${similarityLink}
-              </div>
+              ${aiReportLink}
+              ${similarityLink}
             </div>
           </div>
         ` : (order.status === 'failed' ? `
