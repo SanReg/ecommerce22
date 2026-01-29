@@ -570,7 +570,13 @@
       border: 1px solid var(--card-border);
       border-radius: 12px;
       overflow: hidden;
-      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transition: box-shadow 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 4px 24px rgba(99, 102, 241, 0.13);
+    }
+    .faq-item:hover, .faq-item:focus-within {
+      box-shadow: 0 8px 32px rgba(99, 102, 241, 0.22), 0 1.5px 8px rgba(6,182,212,0.10);
+      transform: translateY(-2px) scale(1.012);
+      background: linear-gradient(135deg, var(--card-bg) 0%, rgba(99,102,241,0.07) 100%);
     }
     .faq-question {
       width: 100%;
@@ -587,7 +593,14 @@
       cursor: pointer;
       font-size: 1rem;
       white-space: normal;
-      transition: color 0.2s ease;
+      transition: color 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+      border-radius: 8px;
+      outline: none;
+    }
+    .faq-question:hover, .faq-question:focus {
+      color: var(--accent);
+      /* background removed so only the box gets the effect */
+      box-shadow: 0 2px 12px rgba(99,102,241,0.10);
     }
     .faq-question:focus-visible {
       outline: 2px solid var(--accent);
@@ -1220,11 +1233,11 @@
     <div class="grid">
       <div class="card">
         <ul class="list">
-          <li>✓ Results within 20 minutes</li>
-          <li>✓ Available 18 hours worldwide</li>
-          <li>✓ No repository guaranteed</li>
-          <li>✓ Optimized specifically for Turnitin</li>
-          <li>✓ Credits never expire</li>
+          <li>Results within 11 minutes</li>
+          <li>Available 24 hours worldwide</li>
+          <li>No repository guaranteed</li>
+          <li>Optimized specifically for Turnitin</li>
+          <li>Credits never expire</li>
         </ul>
       </div>
     </div>
@@ -1233,10 +1246,10 @@
     <div class="grid">
       <div class="card">
         <ul class="list">
-          <li>→ File size less than 10 MB</li>
-          <li>→ More than 350 words; under 30,000 words</li>
-          <li>→ Languages: English, Spanish, or Japanese</li>
-          <li>→ Accepted: .docx, .pdf, .doc</li>
+          <li>File size less than 10 MB</li>
+          <li>More than 350 words; under 30,000 words</li>
+          <li>Languages: English, Spanish, or Japanese</li>
+          <li>Accepted: .docx, .pdf, .doc</li>
         </ul>
       </div>
     </div>
@@ -1248,6 +1261,19 @@
     <div id="faq" style="max-width: 1200px; margin: 0 auto; padding: 0 1.5rem 3rem;">
       <h3 class="section-title">❓ Frequently Asked Questions (FAQ)</h3>
       <div class="faq-list" style="display: grid; gap: 1rem;">
+
+        <!-- Item: Extension for Downtime -->
+      <div class="faq-item" style="background: linear-gradient(135deg, var(--card-bg) 0%, rgba(30,41,59,0.6) 100%); border: 1px solid var(--card-border); border-radius: 12px; overflow: hidden;">
+        <button class="faq-question" aria-expanded="false" style="width: 100%; text-align: left; background: none; border: none; color: var(--text-primary); font-weight: 700; padding: 1rem 1.25rem; display: grid; grid-template-columns: 1fr auto; gap: 0.75rem; align-items: start; cursor: pointer;">
+          <span>🕒 Will weekly/monthly plan user get a 1-day extension if Turnitin is down for a day?</span>
+          <span style="opacity: 0.8;">＋</span>
+        </button>
+        <div class="faq-answer" style="display: none; padding: 0 1.25rem 1rem 1.25rem; color: var(--text-secondary);">
+          <p>No. Extensions are not provided for downtime.</p>
+        </div>
+      </div>
+
+
       <!-- Item: Buy Credits -->
       <div class="faq-item" style="background: linear-gradient(135deg, var(--card-bg) 0%, rgba(30,41,59,0.6) 100%); border: 1px solid var(--card-border); border-radius: 12px; overflow: hidden;">
         <button class="faq-question" aria-expanded="false" style="width: 100%; text-align: left; background: none; border: none; color: var(--text-primary); font-weight: 700; padding: 1rem 1.25rem; display: grid; grid-template-columns: 1fr auto; gap: 0.75rem; align-items: start; cursor: pointer;">
@@ -1257,7 +1283,7 @@
         <div class="faq-answer" style="display: none; padding: 0 1.25rem 1rem 1.25rem; color: var(--text-secondary);">
           <ul class="list">
             <li>Join our Discord server and create a support ticket</li>
-            <li>Or contact the admin on Telegram: @rs_smooth</li>
+            <!-- <li>Or contact the admin on Telegram: @rs_smooth</li> -->
           </ul>
           <p class="section-sub">After successful payment, you will receive a redeem code. Redeem the code on the website to add credits to your account.</p>
         </div>
@@ -1271,7 +1297,7 @@
         </button>
         <div class="faq-answer" style="display: none; padding: 0 1.25rem 1rem 1.25rem; color: var(--text-secondary);">
           <ul class="list">
-            <li>You can expect 15–18 hours of smooth Turnitin access daily.</li>
+            <li>You can expect 24 hours of smooth Turnitin access daily.</li>
             <li>Short downtimes may occasionally occur due to maintenance or high traffic.</li>
           </ul>
         </div>
@@ -1300,7 +1326,7 @@
         </button>
         <div class="faq-answer" style="display: none; padding: 0 1.25rem 1rem 1.25rem; color: var(--text-secondary);">
           <ul class="list">
-            <li>File size must be less than 25 MB</li>
+            <li>File size must be less than 10 MB</li>
             <li>File must contain more than <strong>350 words</strong></li>
             <li>File must not exceed <strong>30,000 words</strong></li>
             <li>File language must be English, Spanish, or Japanese</li>
@@ -1316,7 +1342,7 @@
           <span style="opacity: 0.8;">＋</span>
         </button>
         <div class="faq-answer" style="display: none; padding: 0 1.25rem 1rem 1.25rem; color: var(--text-secondary);">
-          <p class="section-sub">Reports are typically delivered within <strong>15 minutes to 2 hours</strong>, depending on system load and queue size.</p>
+          <p class="section-sub">Reports are typically delivered within <strong>11 minutes</strong>, but it may take more during high traffic.</p>
         </div>
       </div>
 
@@ -1457,6 +1483,7 @@
         </a>
         <p class="discord-text">Connect with thousands of users, share experiences, and get support</p>
       </div>
+      <!--
       <div class="footer-section telegram-section">
         <h4>Join Our Telegram</h4>
         <a href="https://t.me/CheckMyPaper" target="_blank" class="telegram-link">
@@ -1467,6 +1494,7 @@
         </a>
         <p class="telegram-text">Stay updated with announcements, tips, and exclusive offers</p>
       </div>
+      -->
       <div class="footer-section">
         <h4>Email</h4>
         <a href="mailto:support@checkmypaper.net" style="display: inline-flex; align-items: center; gap: 0.75rem; color: var(--primary); text-decoration: none; font-weight: 600; font-size: 1.05rem; transition: all 0.3s ease; padding: 0.75rem 1.25rem; background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(6, 182, 212, 0.05) 100%); border-radius: 10px; border: 1px solid rgba(99, 102, 241, 0.2);" onmouseover="this.style.background='linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(6, 182, 212, 0.1) 100%)'; this.style.color='var(--accent)'" onmouseout="this.style.background='linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(6, 182, 212, 0.05) 100%)'; this.style.color='var(--primary)'">
