@@ -363,29 +363,47 @@ async function submitOrder() {
   }
 }
 
+// User orders pagination state
+let userOrders = [];
+let userOrdersCurrentPage = 1;
+const USER_ORDERS_PER_PAGE = 21;
+
 async function loadUserOrders() {
   try {
     const response = await fetch('/api/orders/my-orders', {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     const orders = await response.json();
-    displayUserOrders(orders);
+    userOrders = Array.isArray(orders) ? orders : [];
+    userOrdersCurrentPage = 1;
+    displayUserOrders(userOrders, 1);
   } catch (error) {
     showMessage('Error loading orders', 'error');
   }
 }
 
-function displayUserOrders(orders) {
+function displayUserOrders(orders, page = 1) {
   const container = document.getElementById('userOrdersContainer');
-  
-  if (orders.length === 0) {
+  if (!container) return;
+
+  if (!orders || orders.length === 0) {
     container.innerHTML = '<div class="empty-state"><h2>No orders yet</h2></div>';
     return;
   }
 
+  // Pagination
+  const totalOrders = orders.length;
+  const totalPages = Math.ceil(totalOrders / USER_ORDERS_PER_PAGE);
+  if (page < 1) page = 1;
+  if (page > totalPages) page = totalPages;
+  userOrdersCurrentPage = page;
+  const startIdx = (page - 1) * USER_ORDERS_PER_PAGE;
+  const endIdx = Math.min(startIdx + USER_ORDERS_PER_PAGE, totalOrders);
+  const pagedOrders = orders.slice(startIdx, endIdx);
+
   let html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">';
 
-  orders.forEach(order => {
+  pagedOrders.forEach(order => {
     const statusClass = order.status === 'completed' ? 'status-completed' : (order.status === 'failed' ? 'status-failed' : 'status-pending');
     const orderDateTime = new Date(order.createdAt);
     const date = orderDateTime.toLocaleDateString();
@@ -468,10 +486,34 @@ function displayUserOrders(orders) {
   });
 
   html += '</div>';
+
+  // Pagination controls
+  if (totalPages > 1) {
+    html += `<div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin: 2rem 0 1rem 0;">
+      <button onclick="prevUserOrdersPage()" ${page === 1 ? 'disabled' : ''} style="padding: 0.5rem 1rem; border-radius: 8px; border: none; background: #e5e7eb; color: #1f2937; font-weight: 600; cursor: pointer;${page === 1 ? 'opacity:0.5;cursor:not-allowed;' : ''}">Prev</button>
+      <span style="font-size: 0.95rem; font-weight: 700;">Page ${page} of ${totalPages}</span>
+      <button onclick="nextUserOrdersPage()" ${page === totalPages ? 'disabled' : ''} style="padding: 0.5rem 1rem; border-radius: 8px; border: none; background: #e5e7eb; color: #1f2937; font-weight: 600; cursor: pointer;${page === totalPages ? 'opacity:0.5;cursor:not-allowed;' : ''}">Next</button>
+    </div>`;
+  }
+
   container.innerHTML = html;
   
   // Initialize countdown timers for all orders
   initializeCountdownTimers();
+}
+
+// Pagination navigation for user orders (global for onclick handlers)
+window.prevUserOrdersPage = function() {
+  if (userOrdersCurrentPage > 1) {
+    displayUserOrders(userOrders, userOrdersCurrentPage - 1);
+  }
+}
+
+window.nextUserOrdersPage = function() {
+  const totalPages = Math.ceil(userOrders.length / USER_ORDERS_PER_PAGE);
+  if (userOrdersCurrentPage < totalPages) {
+    displayUserOrders(userOrders, userOrdersCurrentPage + 1);
+  }
 }
 
 // Store active countdown timers

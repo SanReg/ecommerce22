@@ -371,7 +371,7 @@ async function loadAllOrders() {
       return;
     }
     allOrders = data;
-    displayAllOrders(data);
+    displayAllOrders(data, 1);
     refreshUsersView();
   } catch (error) {
     console.error('Admin orders fetch error:', error);
@@ -379,17 +379,33 @@ async function loadAllOrders() {
   }
 }
 
-function displayAllOrders(orders) {
+// Pagination state for orders
+let ordersCurrentPage = 1;
+const ORDERS_PER_PAGE = 100;
+
+function displayAllOrders(orders, page) {
+  if (!page || isNaN(page) || page < 1) page = 1;
   const container = document.getElementById('allOrdersContainer');
-  
-  if (orders.length === 0) {
+  if (!container) return;
+
+  if (!orders || orders.length === 0) {
     container.innerHTML = '<div class="empty-state"><h2>No orders</h2></div>';
     return;
   }
 
+  // Pagination logic
+  const totalOrders = orders.length;
+  const totalPages = Math.ceil(totalOrders / ORDERS_PER_PAGE);
+  if (page < 1) page = 1;
+  if (page > totalPages) page = totalPages;
+  ordersCurrentPage = page;
+  const startIdx = (page - 1) * ORDERS_PER_PAGE;
+  const endIdx = Math.min(startIdx + ORDERS_PER_PAGE, totalOrders);
+  const pagedOrders = orders.slice(startIdx, endIdx);
+
   let html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">';
 
-  orders.forEach(order => {
+  pagedOrders.forEach(order => {
     const statusClass = order.status === 'completed' ? 'status-completed' : (order.status === 'failed' ? 'status-failed' : 'status-pending');
     const orderDateTime = new Date(order.createdAt);
     const date = orderDateTime.toLocaleDateString();
@@ -515,10 +531,34 @@ function displayAllOrders(orders) {
   });
 
   html += '</div>';
+
+  // Pagination controls
+  if (totalPages > 1) {
+    html += `<div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin: 2rem 0 1rem 0;">
+      <button onclick="prevOrdersPage()" ${page === 1 ? 'disabled' : ''} style="padding: 0.6rem 1.2rem; border-radius: 8px; border: none; background: #e5e7eb; color: #1f2937; font-weight: 600; cursor: pointer;${page === 1 ? 'opacity:0.5;cursor:not-allowed;' : ''}">Prev</button>
+      <span style="font-size: 1rem; font-weight: 600;">Page ${page} of ${totalPages}</span>
+      <button onclick="nextOrdersPage()" ${page === totalPages ? 'disabled' : ''} style="padding: 0.6rem 1.2rem; border-radius: 8px; border: none; background: #e5e7eb; color: #1f2937; font-weight: 600; cursor: pointer;${page === totalPages ? 'opacity:0.5;cursor:not-allowed;' : ''}">Next</button>
+    </div>`;
+  }
+
   container.innerHTML = html;
 
   // Setup drag and drop for all upload inputs
   setupDragAndDrop();
+}
+
+// Pagination navigation functions (attach to window for HTML onclick)
+window.prevOrdersPage = function() {
+  if (ordersCurrentPage > 1) {
+    displayAllOrders(allOrders, ordersCurrentPage - 1);
+  }
+}
+
+window.nextOrdersPage = function() {
+  const totalPages = Math.ceil(allOrders.length / ORDERS_PER_PAGE);
+  if (ordersCurrentPage < totalPages) {
+    displayAllOrders(allOrders, ordersCurrentPage + 1);
+  }
 }
 
 async function loadTicketsAdmin() {

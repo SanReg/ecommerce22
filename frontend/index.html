@@ -538,7 +538,12 @@ Accepted file types: .docx, .pdf, .doc</small>
     </div>
   </footer>
 
-  <script src="js/app.js"></script>
+  <noscript>
+    <div style="background: #ef4444; color: #fff; font-weight: bold; padding: 10px; text-align: center; z-index: 9999;">
+      [ERROR] JavaScript is disabled or not supported. The dashboard will not work.
+    </div>
+  </noscript>
+  <script src="js/app.js" onerror="document.body.insertAdjacentHTML('afterbegin', '<div style=\'background: #ef4444; color: #fff; font-weight: bold; padding: 10px; text-align: center; z-index: 9999;\'>[ERROR] Failed to load js/app.js. Check the script path and file existence.</div>')"></script>
 
   <!--Start of Tawk.to Script-->
   <script type="text/javascript">
