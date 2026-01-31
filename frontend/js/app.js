@@ -66,7 +66,74 @@ document.addEventListener('DOMContentLoaded', () => {
   setupPasswordChangeForm();
   setupBuyFlow();
   loadTickets();
+  // Start user-side order monitoring for dynamic updates
+  startUserOrderMonitoring();
 });
+
+// Start polling on user's orders to detect status transitions (pending/processing -> completed/failed)
+function startUserOrderMonitoring(intervalMs = 10000) {
+  if (userOrderCheckInterval) clearInterval(userOrderCheckInterval);
+  userOrderCheckInterval = setInterval(async () => {
+    try {
+      const response = await fetch('/api/orders/my-orders', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) return;
+      const orders = await response.json();
+      if (!Array.isArray(orders)) return;
+
+      // Compare with existing userOrders to find transitions
+      const oldMap = new Map(userOrders.map(o => [o._id, o]));
+      const transitions = [];
+
+      orders.forEach(o => {
+        const old = oldMap.get(o._id);
+        if (old && old.status !== o.status) {
+          const wasPending = old.status === 'pending' || old.status === 'processing';
+          const isDone = o.status === 'completed' || o.status === 'failed';
+          if (wasPending && isDone) transitions.push({ id: o._id, status: o.status });
+        }
+      });
+
+      // Update orders badge with pending count
+      const pendingCount = orders.filter(o => o.status === 'pending' || o.status === 'processing').length;
+      const badge = document.getElementById('ordersBadge');
+      if (badge) {
+        if (pendingCount > 0) {
+          badge.textContent = pendingCount;
+          badge.style.display = 'inline-flex';
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+
+      // If any transitions found, update internal state and re-render current page if Orders tab is active
+      if (transitions.length > 0) {
+        userOrders = orders;
+        try { lastUserOrdersSnapshot = JSON.stringify(orders.map(o => ({ _id: o._id, status: o.status, createdAt: o.createdAt }))); } catch(e){ }
+
+        const ordersTab = document.getElementById('orders');
+        if (ordersTab && ordersTab.classList.contains('active')) {
+          // Show a browser alert for each transition (completed/failed) instead of toast
+          transitions.forEach(t => {
+            if (t.status === 'completed') {
+              alert('Your order is completed');
+            } else if (t.status === 'failed') {
+              alert('Your order failed');
+            } else {
+              alert('Your order status is now ' + t.status);
+            }
+          });
+
+          // Re-render current page
+          displayUserOrders(userOrders, userOrdersCurrentPage);
+        }
+      }
+    } catch (error) {
+      console.error('Error monitoring user orders:', error);
+    }
+  }, intervalMs);
+}
 
 function setupTabButtons() {
   // Support sidebar navigation, mobile tabs, and old tab button classes
@@ -368,6 +435,10 @@ let userOrders = [];
 let userOrdersCurrentPage = 1;
 const USER_ORDERS_PER_PAGE = 21;
 
+// Live monitoring state for user orders
+let userOrderCheckInterval = null;
+let lastUserOrdersSnapshot = '';
+
 // Render a lightweight skeleton placeholder while orders load
 function renderOrdersSkeleton(count = 6) {
   let s = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">';
@@ -400,6 +471,12 @@ async function loadUserOrders() {
     const orders = await response.json();
     userOrders = Array.isArray(orders) ? orders : [];
     userOrdersCurrentPage = 1;
+
+    // store a compact snapshot for quick change detection
+    try {
+      lastUserOrdersSnapshot = JSON.stringify(userOrders.map(o => ({ _id: o._id, status: o.status, createdAt: o.createdAt })));
+    } catch (e) { lastUserOrdersSnapshot = ''; }
+
     displayUserOrders(userOrders, 1);
   } catch (error) {
     showMessage('Error loading orders', 'error');
@@ -1004,6 +1081,8 @@ function showMessage(message, type) {
 }
 
 function logout() {
+  // Clear any user-side polling
+  try { if (userOrderCheckInterval) clearInterval(userOrderCheckInterval); } catch (e) {}
   localStorage.clear();
   window.location.href = 'login.html';
 }
