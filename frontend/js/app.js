@@ -368,7 +368,31 @@ let userOrders = [];
 let userOrdersCurrentPage = 1;
 const USER_ORDERS_PER_PAGE = 21;
 
+// Render a lightweight skeleton placeholder while orders load
+function renderOrdersSkeleton(count = 6) {
+  let s = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">';
+  for (let i = 0; i < count; i++) {
+    s += `
+      <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.04);">
+        <div style="height: 18px; width: 50%; background: #eef2ff; border-radius: 6px; margin-bottom: 0.75rem;"></div>
+        <div style="height: 12px; width: 40%; background: #eef2ff; border-radius: 6px; margin-bottom: 1rem;"></div>
+        <div style="height: 10px; width: 80%; background: #f1f5f9; border-radius: 6px; margin-bottom: 0.5rem;"></div>
+        <div style="height: 10px; width: 60%; background: #f1f5f9; border-radius: 6px; margin-bottom: 0.5rem;"></div>
+        <div style="display:flex; gap:0.5rem; margin-top:1rem;"><div style="height:36px; width:48%; background:#eef2ff; border-radius:8px;"></div><div style="height:36px; width:48%; background:#eef2ff; border-radius:8px;"></div></div>
+      </div>
+    `;
+  }
+  s += '</div>';
+  return s;
+}
+
 async function loadUserOrders() {
+  const container = document.getElementById('userOrdersContainer');
+  if (container) {
+    // Show skeleton immediately to indicate loading
+    container.innerHTML = renderOrdersSkeleton(6);
+  }
+
   try {
     const response = await fetch('/api/orders/my-orders', {
       headers: { 'Authorization': `Bearer ${token}` }
@@ -401,6 +425,7 @@ function displayUserOrders(orders, page = 1) {
   const endIdx = Math.min(startIdx + USER_ORDERS_PER_PAGE, totalOrders);
   const pagedOrders = orders.slice(startIdx, endIdx);
 
+  console.time('renderUserOrders');
   let html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">';
 
   pagedOrders.forEach(order => {
@@ -496,10 +521,21 @@ function displayUserOrders(orders, page = 1) {
     </div>`;
   }
 
-  container.innerHTML = html;
-  
-  // Initialize countdown timers for all orders
-  initializeCountdownTimers();
+  // Use requestAnimationFrame to allow browser to paint initial UI first
+  requestAnimationFrame(() => {
+    container.innerHTML = html;
+    // measure render time
+    try { console.timeEnd('renderUserOrders'); } catch (e) {}
+
+    // Defer countdown initialization slightly so rendering isn't blocked
+    setTimeout(() => {
+      try {
+        initializeCountdownTimers();
+      } catch (e) {
+        console.error('Error initializing countdowns:', e);
+      }
+    }, 40);
+  });
 }
 
 // Pagination navigation for user orders (global for onclick handlers)

@@ -403,6 +403,7 @@ function displayAllOrders(orders, page) {
   const endIdx = Math.min(startIdx + ORDERS_PER_PAGE, totalOrders);
   const pagedOrders = orders.slice(startIdx, endIdx);
 
+  console.time('renderOrders');
   let html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">';
 
   pagedOrders.forEach(order => {
@@ -542,9 +543,16 @@ function displayAllOrders(orders, page) {
   }
 
   container.innerHTML = html;
+  console.timeEnd('renderOrders');
 
-  // Setup drag and drop for all upload inputs
-  setupDragAndDrop();
+  // Defer heavy initialization slightly so browser can paint the first page quickly
+  setTimeout(() => {
+    try {
+      setupDragAndDrop();
+    } catch (e) {
+      console.error('Error during setupDragAndDrop:', e);
+    }
+  }, 50);
 }
 
 // Pagination navigation functions (attach to window for HTML onclick)
