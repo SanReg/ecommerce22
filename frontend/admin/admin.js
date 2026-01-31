@@ -8,6 +8,8 @@ let lastPendingOrderCount = 0;
 let lastPendingTicketCount = 0;
 let orderCheckInterval = null;
 let ticketCheckInterval = null;
+// Snapshot to detect changes on first page quickly
+let lastOrdersSnapshot = '';
 let showOnlyPositiveChecks = false;
 
 function toggleChecksFilter() {
@@ -219,25 +221,27 @@ document.head.appendChild(style);
 // Check for new orders periodically
 function startOrderMonitoring() {
   if (orderCheckInterval) clearInterval(orderCheckInterval);
-  
+
   orderCheckInterval = setInterval(async () => {
     try {
       const response = await fetch('/api/admin/orders', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      
+
       if (!response.ok) return;
-      
+
       const orders = await response.json();
+      if (!Array.isArray(orders)) return;
+
       const pendingOrders = orders.filter(o => o.status === 'pending').length;
-      
+
       // Update page title with pending orders count
       if (pendingOrders > 0) {
         document.title = `(${pendingOrders}) Admin Dashboard`;
       } else {
         document.title = 'Admin Dashboard';
       }
-      
+
       // Update badge
       const badge = document.getElementById('pendingBadge');
       if (badge) {
@@ -248,14 +252,32 @@ function startOrderMonitoring() {
           badge.style.display = 'none';
         }
       }
-      
-      // If new pending orders detected, alert admin
+
+      // If pending count increased, notify admin
       if (pendingOrders > lastPendingOrderCount) {
         const newOrderCount = pendingOrders - lastPendingOrderCount;
         playNotificationSound();
         showOrderNotification(newOrderCount);
       }
-      
+
+      // Quick snapshot of first page to detect changes without re-rendering every time
+      const snapshot = JSON.stringify(orders.slice(0, ORDERS_PER_PAGE).map(o => ({ _id: o._id, status: o.status, createdAt: o.createdAt, checksUsed: o.checksUsed, userFile: o.userFile && (o.userFile.public_id || o.userFile.publicId), aiReport: o.adminFiles && o.adminFiles.aiReport && (o.adminFiles.aiReport.public_id || o.adminFiles.aiReport.publicId), similarity: o.adminFiles && o.adminFiles.similarityReport && (o.adminFiles.similarityReport.public_id || o.adminFiles.similarityReport.publicId) })));
+
+      if (snapshot !== lastOrdersSnapshot) {
+        // update local orders array
+        allOrders = orders;
+        lastOrdersSnapshot = snapshot;
+
+        // Only re-render if admin is viewing Orders tab to avoid unnecessary DOM changes
+        const ordersTab = document.getElementById('orders');
+        if (ordersTab && ordersTab.classList.contains('active')) {
+          // Show a subtle indicator for live update
+          showMessage('Orders updated', 'info');
+          // Render first page to show newest orders at top
+          displayAllOrders(allOrders, 1);
+        }
+      }
+
       lastPendingOrderCount = pendingOrders;
     } catch (error) {
       console.error('Error checking for new orders:', error);
@@ -339,7 +361,10 @@ function switchTab(tabName) {
   document.getElementById(tabName).classList.add('active');
   document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
 
-  if (tabName === 'codes') {
+  if (tabName === 'orders') {
+    // Re-fetch and show skeleton when switching to Orders for a quick UX
+    loadAllOrders();
+  } else if (tabName === 'codes') {
     loadCodes();
   } else if (tabName === 'status') {
     loadServiceStatus();
@@ -355,6 +380,17 @@ function displayAdminInfo() {
 }
 
 async function loadAllOrders() {
+  const container = document.getElementById('allOrdersContainer');
+  if (container) {
+    // If we have cached orders, render them immediately and fetch updates in background.
+    if (Array.isArray(allOrders) && allOrders.length > 0) {
+      displayAllOrders(allOrders, ordersCurrentPage);
+    } else {
+      // Show skeleton right away for perceived performance
+      container.innerHTML = renderOrdersSkeleton(8);
+    }
+  }
+
   try {
     const response = await fetch('/api/admin/orders', {
       headers: { 'Authorization': `Bearer ${token}` }
@@ -371,6 +407,9 @@ async function loadAllOrders() {
       return;
     }
     allOrders = data;
+    // Save snapshot for quick change detection (only small set of fields)
+    lastOrdersSnapshot = JSON.stringify(data.slice(0, ORDERS_PER_PAGE).map(o => ({ _id: o._id, status: o.status, createdAt: o.createdAt, checksUsed: o.checksUsed, userFile: o.userFile && (o.userFile.public_id || o.userFile.publicId || o.userFile.publicId), aiReport: o.adminFiles && o.adminFiles.aiReport && (o.adminFiles.aiReport.public_id || o.adminFiles.aiReport.publicId), similarity: o.adminFiles && o.adminFiles.similarityReport && (o.adminFiles.similarityReport.public_id || o.adminFiles.similarityReport.publicId) })));
+
     displayAllOrders(data, 1);
     refreshUsersView();
   } catch (error) {
@@ -382,6 +421,24 @@ async function loadAllOrders() {
 // Pagination state for orders
 let ordersCurrentPage = 1;
 const ORDERS_PER_PAGE = 100;
+
+// Render lightweight skeleton for orders list
+function renderOrdersSkeleton(count = 6) {
+  let s = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">';
+  for (let i = 0; i < count; i++) {
+    s += `
+      <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.04);">
+        <div style="height: 18px; width: 40%; background: #eef2ff; border-radius: 6px; margin-bottom: 0.6rem;"></div>
+        <div style="height: 12px; width: 60%; background: #eef2ff; border-radius: 6px; margin-bottom: 0.8rem;"></div>
+        <div style="height: 10px; width: 80%; background: #f1f5f9; border-radius: 6px; margin-bottom: 0.5rem;"></div>
+        <div style="height: 10px; width: 50%; background: #f1f5f9; border-radius: 6px; margin-bottom: 0.5rem;"></div>
+        <div style="display:flex; gap:0.5rem; margin-top:1rem;"><div style="height:36px; width:48%; background:#eef2ff; border-radius:8px;"></div><div style="height:36px; width:48%; background:#eef2ff; border-radius:8px;"></div></div>
+      </div>
+    `;
+  }
+  s += '</div>';
+  return s;
+}
 
 function displayAllOrders(orders, page) {
   if (!page || isNaN(page) || page < 1) page = 1;
@@ -542,17 +599,20 @@ function displayAllOrders(orders, page) {
     </div>`;
   }
 
-  container.innerHTML = html;
-  console.timeEnd('renderOrders');
+  // Use requestAnimationFrame so browser can paint before running heavy JS
+  requestAnimationFrame(() => {
+    container.innerHTML = html;
+    try { console.timeEnd('renderOrders'); } catch (e) {}
 
-  // Defer heavy initialization slightly so browser can paint the first page quickly
-  setTimeout(() => {
-    try {
-      setupDragAndDrop();
-    } catch (e) {
-      console.error('Error during setupDragAndDrop:', e);
-    }
-  }, 50);
+    // Defer heavy initialization slightly so browser can finish painting
+    setTimeout(() => {
+      try {
+        setupDragAndDrop();
+      } catch (e) {
+        console.error('Error during setupDragAndDrop:', e);
+      }
+    }, 50);
+  });
 }
 
 // Pagination navigation functions (attach to window for HTML onclick)
