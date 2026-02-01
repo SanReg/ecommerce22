@@ -504,6 +504,10 @@ function displayAllOrders(orders, page) {
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
           <div style="flex: 1;">
             <h3 style="color: #1f2937; font-size: 1.05rem; margin: 0 0 0.3rem 0; font-weight: 700;">${bookTitle}</h3>
+            <div style="margin-top: 0.45rem; display: flex; gap: 0.5rem; align-items: center;">
+              ${Number(order.regularChecksUsed) === 1 ? `<span style="padding: 0.18rem 0.5rem; border-radius: 6px; font-size: 0.75rem; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: white; font-weight: 700;">Regular Order</span>` : ''}
+              ${Number(order.dailyCreditsUsed) === 1 ? `<span style="padding: 0.18rem 0.5rem; border-radius: 6px; font-size: 0.75rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; font-weight: 700;">Daily Order</span>` : ''}
+            </div>
             <code style="background: #f0f0f0; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.7rem; color: #666;">${order._id}</code>
           </div>
           <span class="status-badge ${statusClass}" style="font-size: 0.8rem; padding: 0.4rem 0.8rem;">${order.status}</span>
@@ -979,6 +983,7 @@ function downloadQualifiedUsers() {
       'Is Unlimited': user.isUnlimited ? 'Yes' : 'No',
       'Daily Credits': unlimitedSettings.dailyCredits || 0,
       'Daily Credits Used Today': unlimitedSettings.dailyCreditsUsedToday || 0,
+      'Daily Credits Remaining': Math.max(0, (unlimitedSettings.dailyCredits || 0) - (unlimitedSettings.dailyCreditsUsedToday || 0)),
       'Subscription Days Remaining': unlimitedSettings.subscriptionDaysRemaining || 0,
       'Subscription Start Date': subscriptionStartDate,
       'Credits Reset At': creditsResetAt,
@@ -1213,6 +1218,8 @@ function renderOrderStats(results) {
   const totalSum = results.reduce((s, r) => s + (Number(r.total) || 0), 0);
   const completedSum = results.reduce((s, r) => s + (Number(r.completed) || 0), 0);
   const failedSum = results.reduce((s, r) => s + (Number(r.failed) || 0), 0);
+  // RCO: completed orders where regularChecksUsed === 1
+  const rcoSum = results.reduce((s, r) => s + (Number(r.rco) || 0), 0);
   const avgPerDay = (totalSum / days).toFixed(2);
 
   let html = '<div style="overflow:auto; padding: 0.5rem;">';
@@ -1224,20 +1231,21 @@ function renderOrderStats(results) {
   html += '<div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom: 1rem;">';
   html += `<div style="flex:1; min-width:140px; background:#0e141c; border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:0.75rem; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue'; color: #fff;"><div style="color:rgba(255,255,255,0.75); font-size:0.85rem;">Days</div><div style="font-weight:800; font-size:1.15rem; color:#ffffff;">${days}</div></div>`;
   html += `<div style="flex:1; min-width:160px; background:#0e141c; border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:0.75rem; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue'; color: #fff;"><div style="color:rgba(255,255,255,0.75); font-size:0.85rem;">Total Orders</div><div style="font-weight:800; font-size:1.15rem; color:#ffffff;">${totalSum}</div></div>`;
-  html += `<div style="flex:1; min-width:160px; background:#0e141c; border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:0.75rem; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue'; color: #fff;"><div style="color:rgba(255,255,255,0.75); font-size:0.85rem;">Completed</div><div style="font-weight:800; font-size:1.15rem; color:#bbf7d0;">${completedSum}</div></div>`;
+  html += `<div style="flex:1; min-width:140px; background:#0e141c; border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:0.75rem; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue'; color: #fff;"><div style="color:rgba(255,255,255,0.75); font-size:0.85rem;">Completed</div><div style="font-weight:800; font-size:1.15rem; color:#bbf7d0;">${completedSum}</div></div>`;
   html += `<div style="flex:1; min-width:160px; background:#0e141c; border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:0.75rem; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue'; color: #fff;"><div style="color:rgba(255,255,255,0.75); font-size:0.85rem;">Failed</div><div style="font-weight:800; font-size:1.15rem; color:#fecaca;">${failedSum}</div></div>`;
+  html += `<div style="flex:1; min-width:140px; background:#0e141c; border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:0.75rem; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue'; color: #fff;"><div style="color:rgba(255,255,255,0.75); font-size:0.85rem;">RCO</div><div style="font-weight:800; font-size:1.15rem; color:#fff;">${rcoSum}</div></div>`;
   html += `<div style="flex:1; min-width:140px; background:#0e141c; border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:0.75rem; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue'; color: #fff;"><div style="color:rgba(255,255,255,0.75); font-size:0.85rem;">Avg / day</div><div style="font-weight:800; font-size:1.15rem; color:#ffffff;">${avgPerDay}</div></div>`;
   html += '</div>';
 
   // Daily orders table (date, total, completed, failed) — use separate collapse and vertical spacing for row separation
   html += '<div style="overflow:auto;"><table style="width:100%; border-collapse: separate; border-spacing: 0 8px;">';
-  html += '<thead><tr><th style="text-align:left; padding: 0.6rem; border-bottom:1px solid rgba(255,255,255,0.06); background:#0e141c; color:#fff; font-family: system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\"; font-weight:700;">Date (UTC)</th><th style="text-align:right; padding:0.6rem; border-bottom:1px solid #111; background:#0e141c; color:#fff; font-family: system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\"; font-weight:700;">Total</th><th style="text-align:right; padding:0.6rem; border-bottom:1px solid #111; background:#0e141c; color:#fff; font-family: system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\"; font-weight:700;">Completed</th><th style="text-align:right; padding:0.6rem; border-bottom:1px solid #111; background:#0e141c; color:#fff; font-family: system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\"; font-weight:700;">Failed</th></tr></thead><tbody>';
+  html += '<thead><tr><th style="text-align:left; padding: 0.6rem; border-bottom:1px solid rgba(255,255,255,0.06); background:#0e141c; color:#fff; font-family: system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\"; font-weight:700;">Date (UTC)</th><th style="text-align:right; padding:0.6rem; border-bottom:1px solid #111; background:#0e141c; color:#fff; font-family: system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\"; font-weight:700;">Total</th><th style="text-align:right; padding:0.6rem; border-bottom:1px solid #111; background:#0e141c; color:#fff; font-family: system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\"; font-weight:700;">Completed</th><th style="text-align:right; padding:0.6rem; border-bottom:1px solid #111; background:#0e141c; color:#fff; font-family: system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\"; font-weight:700;">Failed</th><th style="text-align:right; padding:0.6rem; border-bottom:1px solid #111; background:#0e141c; color:#fff; font-family: system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\"; font-weight:700;">RCO</th></tr></thead><tbody>';
 
   results.forEach(r => {
     const total = Number(r.total) || 0;
     const completed = Number(r.completed) || 0;
     const failed = Number(r.failed) || 0;
-    html += `<tr style="background:transparent; color:#fff;"><td style="padding:0.5rem; border-bottom:1px solid rgba(255,255,255,0.06); background:#0e141c; border-radius:6px;">${r.date}</td><td style="padding:0.5rem; text-align:right; border-bottom:1px solid rgba(255,255,255,0.06); background:#0e141c;">${total}</td><td style="padding:0.5rem; text-align:right; border-bottom:1px solid rgba(255,255,255,0.06); background:#0e141c;">${completed}</td><td style="padding:0.5rem; text-align:right; border-bottom:1px solid rgba(255,255,255,0.06); background:#0e141c;">${failed}</td></tr>`;
+    html += `<tr style="background:transparent; color:#fff;"><td style="padding:0.5rem; border-bottom:1px solid rgba(255,255,255,0.06); background:#0e141c; border-radius:6px;">${r.date}</td><td style="padding:0.5rem; text-align:right; border-bottom:1px solid rgba(255,255,255,0.06); background:#0e141c;">${total}</td><td style="padding:0.5rem; text-align:right; border-bottom:1px solid rgba(255,255,255,0.06); background:#0e141c;">${completed}</td><td style="padding:0.5rem; text-align:right; border-bottom:1px solid rgba(255,255,255,0.06); background:#0e141c;">${failed}</td><td style="padding:0.5rem; text-align:right; border-bottom:1px solid rgba(255,255,255,0.06); background:#0e141c;">${r.rco || 0}</td></tr>`;
 
   });
 
@@ -1257,8 +1265,8 @@ async function exportOrderStats() {
     const json = await resp.json();
     const rows = json.results || [];
     if (!rows.length) { showMessage('No stats to export', 'error'); return; }
-    const headers = ['date','total','completed','failed'];
-    const csv = [headers.join(',')].concat(rows.map(r => `${r.date},${r.total},${r.completed},${r.failed}`)).join('\n');
+    const headers = ['date','total','completed','failed','rco'];
+    const csv = [headers.join(',')].concat(rows.map(r => `${r.date},${r.total},${r.completed},${r.failed},${r.rco || 0}`)).join('\n');
     const filename = `order-stats-${(new Date()).toISOString().slice(0,10)}.csv`;
     downloadCSV(csv, filename);
     showMessage('Exported order stats', 'success');
@@ -1906,28 +1914,47 @@ function displayUnlimitedUsers(users) {
         <th style="padding: 1rem; text-align: left;">Username</th>
         <th style="padding: 1rem; text-align: left;">Email</th>
         <th style="padding: 1rem; text-align: left;">Daily Credits</th>
+        <th style="padding: 1rem; text-align: left;">Remaining Today</th>
         <th style="padding: 1rem; text-align: left;">Days Remaining</th>
+        <th style="padding: 1rem; text-align: left;">Started At</th>
         <th style="padding: 1rem; text-align: left;">Next Reset</th>
         <th style="padding: 1rem; text-align: left;">Actions</th>
       </tr>
     </thead>
     <tbody>
       ${users.map(user => {
-        const resetDate = new Date(user.unlimitedSettings.creditsResetAt);
-        const resetDateStr = resetDate.toLocaleString('en-US', { 
+        const resetDate = user.unlimitedSettings.creditsResetAt ? new Date(user.unlimitedSettings.creditsResetAt) : null;
+        const resetDateStr = resetDate ? resetDate.toLocaleString('en-US', { 
           year: 'numeric', 
           month: 'short', 
           day: 'numeric', 
           hour: '2-digit', 
           minute: '2-digit',
           timeZoneName: 'short'
-        });
+        }) : 'N/A';
+
+        const startDate = user.unlimitedSettings.subscriptionStartDate ? new Date(user.unlimitedSettings.subscriptionStartDate) : null;
+        const startDateStr = startDate ? startDate.toLocaleString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZoneName: 'short'
+        }) : 'N/A';
+
+        const daily = Number(user.unlimitedSettings.dailyCredits || 0);
+        const used = Number(user.unlimitedSettings.dailyCreditsUsedToday || 0);
+        const remaining = Math.max(0, daily - used);
+
         return `
           <tr style="border-bottom: 1px solid #444;">
             <td style="padding: 1rem;">${user.username}</td>
             <td style="padding: 1rem;">${user.email}</td>
-            <td style="padding: 1rem; color: #10b981; font-weight: bold;">${user.unlimitedSettings.dailyCredits}</td>
+            <td style="padding: 1rem; color: #10b981; font-weight: bold;">${daily}</td>
+            <td style="padding: 1rem; color: ${remaining === 0 ? '#ef4444' : '#10b981'}; font-weight: bold;">${remaining}</td>
             <td style="padding: 1rem; color: ${user.unlimitedSettings.subscriptionDaysRemaining <= 5 ? '#ef4444' : '#06b6d4'}; font-weight: bold;">${user.unlimitedSettings.subscriptionDaysRemaining} days</td>
+            <td style="padding: 1rem; font-size: 0.9rem;">${startDateStr}</td>
             <td style="padding: 1rem; font-size: 0.9rem;">${resetDateStr}</td>
             <td style="padding: 1rem;">
               <button onclick="viewUnlimitedUserDetails('${user._id}')" style="background: #6366f1; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">View</button>

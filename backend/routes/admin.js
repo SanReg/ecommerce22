@@ -51,13 +51,19 @@ router.get('/orders/stats/daily', authMiddleware, adminMiddleware, async (req, r
 
     const agg = await Order.aggregate([
       { $match: { createdAt: { $gte: start, $lte: end } } },
-      { $project: { status: 1, date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt", timezone: "UTC" } } } },
-      { $group: { _id: "$date", total: { $sum: 1 }, completed: { $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] } }, failed: { $sum: { $cond: [{ $eq: ["$status", "failed"] }, 1, 0] } } } },
+      { $project: { status: 1, regularChecksUsed: 1, date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt", timezone: "UTC" } } } },
+      { $group: {
+          _id: "$date",
+          total: { $sum: 1 },
+          completed: { $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] } },
+          failed: { $sum: { $cond: [{ $eq: ["$status", "failed"] }, 1, 0] } },
+          rco: { $sum: { $cond: [ { $and: [ { $eq: ["$status", "completed"] }, { $eq: ["$regularChecksUsed", 1] } ] }, 1, 0 ] } }
+        } },
       { $sort: { _id: 1 } }
     ]);
 
     const map = {};
-    agg.forEach(r => { map[r._id] = { total: r.total, completed: r.completed, failed: r.failed }; });
+    agg.forEach(r => { map[r._id] = { total: r.total, completed: r.completed, failed: r.failed, rco: r.rco || 0 }; });
 
     const results = [];
     // Start from end (today) and go backwards so results are returned in descending order
@@ -68,8 +74,8 @@ router.get('/orders/stats/daily', authMiddleware, adminMiddleware, async (req, r
       const month = String(cur.getUTCMonth() + 1).padStart(2, '0');
       const day = String(cur.getUTCDate()).padStart(2, '0');
       const key = `${year}-${month}-${day}`;
-      const val = map[key] || { total: 0, completed: 0, failed: 0 };
-      results.push({ date: key, total: val.total, completed: val.completed, failed: val.failed });
+      const val = map[key] || { total: 0, completed: 0, failed: 0, rco: 0 };
+      results.push({ date: key, total: val.total, completed: val.completed, failed: val.failed, rco: val.rco });
       // Move to previous UTC day
       cur.setUTCDate(cur.getUTCDate() - 1);
     }
