@@ -60,7 +60,9 @@ router.get('/orders/stats/daily', authMiddleware, adminMiddleware, async (req, r
     agg.forEach(r => { map[r._id] = { total: r.total, completed: r.completed, failed: r.failed }; });
 
     const results = [];
-    const cur = new Date(start);
+    // Start from end (today) and go backwards so results are returned in descending order
+    const cur = new Date(end);
+    cur.setUTCHours(0, 0, 0, 0);
     for (let i = 0; i < days; i++) {
       const year = cur.getUTCFullYear();
       const month = String(cur.getUTCMonth() + 1).padStart(2, '0');
@@ -68,7 +70,8 @@ router.get('/orders/stats/daily', authMiddleware, adminMiddleware, async (req, r
       const key = `${year}-${month}-${day}`;
       const val = map[key] || { total: 0, completed: 0, failed: 0 };
       results.push({ date: key, total: val.total, completed: val.completed, failed: val.failed });
-      cur.setUTCDate(cur.getUTCDate() + 1);
+      // Move to previous UTC day
+      cur.setUTCDate(cur.getUTCDate() - 1);
     }
 
     res.json({ days, results });
