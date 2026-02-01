@@ -12,6 +12,9 @@ const { uploadBuffer, cloudinary } = require('../utils/cloudinary');
 const bcrypt = require('bcryptjs');
 const router = express.Router();
 
+// Number of recent orders to return for admin `/orders` endpoint
+const return_order_no = 200;
+
 function generateCodeString() {
   const charset = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let result = '';
@@ -19,17 +22,56 @@ function generateCodeString() {
     result += charset.charAt(Math.floor(Math.random() * charset.length));
   }
   return result;
-}
+} 
 
-// Get all orders
+// Get recent orders (limited) for admin
 router.get('/orders', authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const orders = await Order.find()
       .populate('user', 'username email checks')
       .populate('book', 'title author price')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .limit(return_order_no);
     
     res.json(orders);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get daily order stats for last N days (UTC dates)
+router.get('/orders/stats/daily', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const daysQuery = parseInt(req.query.days, 10);
+    const days = (!isNaN(daysQuery) && daysQuery > 0) ? Math.min(365, daysQuery) : 30;
+    const end = new Date();
+    const start = new Date(end);
+    start.setUTCDate(start.getUTCDate() - (days - 1));
+    start.setUTCHours(0, 0, 0, 0);
+
+    const agg = await Order.aggregate([
+      { $match: { createdAt: { $gte: start, $lte: end } } },
+      { $project: { status: 1, date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt", timezone: "UTC" } } } },
+      { $group: { _id: "$date", total: { $sum: 1 }, completed: { $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] } }, failed: { $sum: { $cond: [{ $eq: ["$status", "failed"] }, 1, 0] } } } },
+      { $sort: { _id: 1 } }
+    ]);
+
+    const map = {};
+    agg.forEach(r => { map[r._id] = { total: r.total, completed: r.completed, failed: r.failed }; });
+
+    const results = [];
+    const cur = new Date(start);
+    for (let i = 0; i < days; i++) {
+      const year = cur.getUTCFullYear();
+      const month = String(cur.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(cur.getUTCDate()).padStart(2, '0');
+      const key = `${year}-${month}-${day}`;
+      const val = map[key] || { total: 0, completed: 0, failed: 0 };
+      results.push({ date: key, total: val.total, completed: val.completed, failed: val.failed });
+      cur.setUTCDate(cur.getUTCDate() + 1);
+    }
+
+    res.json({ days, results });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

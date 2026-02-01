@@ -335,6 +335,17 @@ document.addEventListener('DOMContentLoaded', () => {
   loadCodes();
   startOrderMonitoring();
 
+  // Prefetch order stats and wire refresh/export buttons
+  loadOrderStats();
+  setTimeout(() => {
+    const refreshBtn = document.getElementById('refreshStatsBtn');
+    const daysSelect = document.getElementById('statsDaysSelect');
+    const exportBtn = document.getElementById('exportStatsBtn');
+    if (refreshBtn) refreshBtn.addEventListener('click', () => loadOrderStats(daysSelect ? daysSelect.value : 30));
+    if (daysSelect) daysSelect.addEventListener('change', () => loadOrderStats(daysSelect.value));
+    if (exportBtn) exportBtn.addEventListener('click', exportOrderStats);
+  }, 200);
+
   const form = document.getElementById('generateCodeForm');
   if (form) {
     form.addEventListener('submit', createRedemptionCode);
@@ -372,6 +383,10 @@ function switchTab(tabName) {
     loadUnlimitedUsers();
   } else if (tabName === 'tickets') {
     loadTicketsAdmin();
+  } else if (tabName === 'order-stats') {
+    // load latest order stats for selected days
+    const daysSelect = document.getElementById('statsDaysSelect');
+    loadOrderStats(daysSelect ? daysSelect.value : 30);
   }
 }
 
@@ -838,10 +853,6 @@ function displayAllUsers(users) {
 
   // Platform stats (from orders)
   const totalUsers = users.length;
-  const totalOrders = allOrders.length;
-  const completedOrders = allOrders.filter(o => o.status === 'completed').length;
-  const failedOrders = allOrders.filter(o => o.status === 'failed').length;
-  const pendingOrders = allOrders.filter(o => o.status === 'pending').length;
   const totalUserCredits = users.reduce((sum, u) => sum + (Number(u.checks) || 0), 0);
 
   let html = `
@@ -849,22 +860,6 @@ function displayAllUsers(users) {
       <div style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border: 2px solid #e2e8f0; border-radius: 12px; padding: 1rem; text-align: center;">
         <div style="color: #6b7280; font-size: 0.85rem;">Total Users</div>
         <div style="color: #1f2937; font-size: 1.3rem; font-weight: 800;">${totalUsers}</div>
-      </div>
-      <div style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border: 2px solid #e2e8f0; border-radius: 12px; padding: 1rem; text-align: center;">
-        <div style="color: #6b7280; font-size: 0.85rem;">Total Orders</div>
-        <div style="color: #1f2937; font-size: 1.3rem; font-weight: 800;">${totalOrders}</div>
-      </div>
-      <div style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border: 2px solid #a7f3d0; border-radius: 12px; padding: 1rem; text-align: center;">
-        <div style="color: #065f46; font-size: 0.85rem;">Completed</div>
-        <div style="color: #065f46; font-size: 1.3rem; font-weight: 800;">${completedOrders}</div>
-      </div>
-      <div style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border: 2px solid #fca5a5; border-radius: 12px; padding: 1rem; text-align: center;">
-        <div style="color: #7f1d1d; font-size: 0.85rem;">Failed</div>
-        <div style="color: #7f1d1d; font-size: 1.3rem; font-weight: 800;">${failedOrders}</div>
-      </div>
-      <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid #fcd34d; border-radius: 12px; padding: 1rem; text-align: center;">
-        <div style="color: #92400e; font-size: 0.85rem;">Pending</div>
-        <div style="color: #92400e; font-size: 1.3rem; font-weight: 800;">${pendingOrders}</div>
       </div>
       <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 2px solid #bfdbfe; border-radius: 12px; padding: 1rem; text-align: center;">
         <div style="color: #1e40af; font-size: 0.85rem;">Total User Credits</div>
@@ -1050,12 +1045,8 @@ function displayAllUsersFiltered(filteredUsers) {
     return;
   }
 
-  // Platform stats (from ALL users and orders, not filtered)
+  // Platform stats (from ALL users, filtered view now excludes aggregate order counts)
   const totalUsers = allUsers.length;
-  const totalOrders = allOrders.length;
-  const completedOrders = allOrders.filter(o => o.status === 'completed').length;
-  const failedOrders = allOrders.filter(o => o.status === 'failed').length;
-  const pendingOrders = allOrders.filter(o => o.status === 'pending').length;
   const totalUserCredits = allUsers.reduce((sum, u) => sum + (Number(u.checks) || 0), 0);
 
   let html = `
@@ -1063,22 +1054,6 @@ function displayAllUsersFiltered(filteredUsers) {
       <div style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border: 2px solid #e2e8f0; border-radius: 12px; padding: 1rem; text-align: center;">
         <div style="color: #6b7280; font-size: 0.85rem;">Total Users</div>
         <div style="color: #1f2937; font-size: 1.3rem; font-weight: 800;">${totalUsers}</div>
-      </div>
-      <div style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border: 2px solid #e2e8f0; border-radius: 12px; padding: 1rem; text-align: center;">
-        <div style="color: #6b7280; font-size: 0.85rem;">Total Orders</div>
-        <div style="color: #1f2937; font-size: 1.3rem; font-weight: 800;">${totalOrders}</div>
-      </div>
-      <div style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border: 2px solid #a7f3d0; border-radius: 12px; padding: 1rem; text-align: center;">
-        <div style="color: #065f46; font-size: 0.85rem;">Completed</div>
-        <div style="color: #065f46; font-size: 1.3rem; font-weight: 800;">${completedOrders}</div>
-      </div>
-      <div style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border: 2px solid #fca5a5; border-radius: 12px; padding: 1rem; text-align: center;">
-        <div style="color: #7f1d1d; font-size: 0.85rem;">Failed</div>
-        <div style="color: #7f1d1d; font-size: 1.3rem; font-weight: 800;">${failedOrders}</div>
-      </div>
-      <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid #fcd34d; border-radius: 12px; padding: 1rem; text-align: center;">
-        <div style="color: #92400e; font-size: 0.85rem;">Pending</div>
-        <div style="color: #92400e; font-size: 1.3rem; font-weight: 800;">${pendingOrders}</div>
       </div>
       <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 2px solid #bfdbfe; border-radius: 12px; padding: 1rem; text-align: center;">
         <div style="color: #1e40af; font-size: 0.85rem;">Total User Credits</div>
@@ -1120,12 +1095,7 @@ function displayAllUsersFiltered(filteredUsers) {
             <span style="font-weight: 600; color: #1a202c;">📅 Joined:</span>
             <span>${date} at ${time}</span>
           </div>
-          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem;">
-            <span style="background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 6px; padding: 0.35rem 0.5rem; font-size: 0.8rem; color: #1f2937; text-align: center;">Total: <strong>${userTotal}</strong></span>
-            <span style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px; padding: 0.35rem 0.5rem; font-size: 0.8rem; color: #065f46; text-align: center;">Completed: <strong>${userCompleted}</strong></span>
-            <span style="background: #fee2e2; border: 1px solid #fca5a5; border-radius: 6px; padding: 0.35rem 0.5rem; font-size: 0.8rem; color: #7f1d1d; text-align: center;">Failed: <strong>${userFailed}</strong></span>
-            <span style="background: #fef3c7; border: 1px solid #fcd34d; border-radius: 6px; padding: 0.35rem 0.5rem; font-size: 0.8rem; color: #92400e; text-align: center;">Pending: <strong>${userPending}</strong></span>
-          </div>
+          <div style="margin-bottom: 0.75rem; color: #6b7280; font-size: 0.9rem;">View user orders for per-user stats</div>
         </div>
         
         <button class="btn-secondary" onclick="viewUserDetails('${user._id}')" style="width: 100%; padding: 0.7rem; font-size: 0.95rem;">👁️ View Orders</button>
@@ -1190,10 +1160,7 @@ function displayUserDetailsModal(data) {
           <p style="margin-bottom: 0.75rem; color: #1f2937;"><strong style="color: #495057;">Username:</strong> ${user.username}</p>
           <p style="margin-bottom: 0.75rem; color: #1f2937;"><strong style="color: #495057;">Email:</strong> ${user.email}</p>
           <p style="margin-bottom: 0.75rem; color: #1f2937;"><strong style="color: #495057;">Credits:</strong> <span style="color: #10b981; font-weight: 700; font-size: 1.1rem;">${user.checks}</span></p>
-          <p style="margin-bottom: 0.5rem; color: #1f2937;"><strong style="color: #495057;">Total Orders:</strong> ${totalOrdersCount}</p>
-          <p style="margin-bottom: 0.25rem; color: #1f2937;"><strong style="color: #495057;">Completed:</strong> <span style="color: #10b981; font-weight: 600;">${completedOrdersCount}</span></p>
-          <p style="margin-bottom: 0.25rem; color: #1f2937;"><strong style="color: #495057;">Failed:</strong> <span style="color: #ef4444; font-weight: 600;">${failedOrdersCount}</span></p>
-          <p style="margin-bottom: 0; color: #1f2937;"><strong style="color: #495057;">Pending:</strong> <span style="color: #f59e0b; font-weight: 600;">${pendingOrdersCount}</span></p>
+          <p style="margin-bottom: 0.75rem; color: #1f2937;"><strong style="color: #495057;">Order summary available below</strong></p>
         </div>
         
         <h3 style="margin-top: 1.5rem; margin-bottom: 1rem; color: #1f2937; font-size: 1.2rem;">Order History:</h3>
@@ -1218,6 +1185,87 @@ function displayUserDetailsModal(data) {
   `;
 
   document.body.insertAdjacentHTML('beforeend', modal);
+}
+
+// --- Order stats loader, renderer and export helpers ---
+async function loadOrderStats(days = 30) {
+  const container = document.getElementById('orderStatsContainer');
+  if (!container) return;
+  container.innerHTML = '<p style="color:#666;">Loading order stats...</p>';
+  try {
+    const resp = await fetch(`/api/admin/orders/stats/daily?days=${days}`, { headers: { 'Authorization': `Bearer ${token}` } });
+    if (!resp.ok) { container.innerHTML = `<p style="color:#f00;">Failed to load stats (${resp.status})</p>`; return; }
+    const json = await resp.json();
+    renderOrderStats(json.results || []);
+  } catch (err) {
+    console.error('Order stats error', err);
+    container.innerHTML = '<p style="color:#f00;">Error loading order stats</p>';
+  }
+}
+
+function renderOrderStats(results) {
+  const container = document.getElementById('orderStatsContainer');
+  if (!container) return;
+  if (!results || results.length === 0) { container.innerHTML = '<p style="color:#666;">No data for selected range</p>'; return; }
+
+  // Compute totals and averages
+  const days = results.length;
+  const totalSum = results.reduce((s, r) => s + (Number(r.total) || 0), 0);
+  const completedSum = results.reduce((s, r) => s + (Number(r.completed) || 0), 0);
+  const failedSum = results.reduce((s, r) => s + (Number(r.failed) || 0), 0);
+  const avgPerDay = (totalSum / days).toFixed(2);
+
+  let html = '<div style="overflow:auto; padding: 0.5rem;">';
+
+  // Entire stats container: dark background (#0e141c) and white text
+  html += '<div style="background:#0e141c; color:#fff; padding:12px; border-radius:8px;">';
+
+  // Summary cards
+  html += '<div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom: 1rem;">';
+  html += `<div style="flex:1; min-width:140px; background:#0e141c; border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:0.75rem; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue'; color: #fff;"><div style="color:rgba(255,255,255,0.75); font-size:0.85rem;">Days</div><div style="font-weight:800; font-size:1.15rem; color:#ffffff;">${days}</div></div>`;
+  html += `<div style="flex:1; min-width:160px; background:#0e141c; border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:0.75rem; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue'; color: #fff;"><div style="color:rgba(255,255,255,0.75); font-size:0.85rem;">Total Orders</div><div style="font-weight:800; font-size:1.15rem; color:#ffffff;">${totalSum}</div></div>`;
+  html += `<div style="flex:1; min-width:160px; background:#0e141c; border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:0.75rem; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue'; color: #fff;"><div style="color:rgba(255,255,255,0.75); font-size:0.85rem;">Completed</div><div style="font-weight:800; font-size:1.15rem; color:#bbf7d0;">${completedSum}</div></div>`;
+  html += `<div style="flex:1; min-width:160px; background:#0e141c; border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:0.75rem; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue'; color: #fff;"><div style="color:rgba(255,255,255,0.75); font-size:0.85rem;">Failed</div><div style="font-weight:800; font-size:1.15rem; color:#fecaca;">${failedSum}</div></div>`;
+  html += `<div style="flex:1; min-width:140px; background:#0e141c; border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:0.75rem; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue'; color: #fff;"><div style="color:rgba(255,255,255,0.75); font-size:0.85rem;">Avg / day</div><div style="font-weight:800; font-size:1.15rem; color:#ffffff;">${avgPerDay}</div></div>`;
+  html += '</div>';
+
+  // Daily orders table (date, total, completed, failed) — use separate collapse and vertical spacing for row separation
+  html += '<div style="overflow:auto;"><table style="width:100%; border-collapse: separate; border-spacing: 0 8px;">';
+  html += '<thead><tr><th style="text-align:left; padding: 0.6rem; border-bottom:1px solid rgba(255,255,255,0.06); background:#0e141c; color:#fff; font-family: system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\"; font-weight:700;">Date (UTC)</th><th style="text-align:right; padding:0.6rem; border-bottom:1px solid #111; background:#0e141c; color:#fff; font-family: system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\"; font-weight:700;">Total</th><th style="text-align:right; padding:0.6rem; border-bottom:1px solid #111; background:#0e141c; color:#fff; font-family: system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\"; font-weight:700;">Completed</th><th style="text-align:right; padding:0.6rem; border-bottom:1px solid #111; background:#0e141c; color:#fff; font-family: system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\"; font-weight:700;">Failed</th></tr></thead><tbody>';
+
+  results.forEach(r => {
+    const total = Number(r.total) || 0;
+    const completed = Number(r.completed) || 0;
+    const failed = Number(r.failed) || 0;
+    html += `<tr style="background:transparent; color:#fff;"><td style="padding:0.5rem; border-bottom:1px solid rgba(255,255,255,0.06); background:#0e141c; border-radius:6px;">${r.date}</td><td style="padding:0.5rem; text-align:right; border-bottom:1px solid rgba(255,255,255,0.06); background:#0e141c;">${total}</td><td style="padding:0.5rem; text-align:right; border-bottom:1px solid rgba(255,255,255,0.06); background:#0e141c;">${completed}</td><td style="padding:0.5rem; text-align:right; border-bottom:1px solid rgba(255,255,255,0.06); background:#0e141c;">${failed}</td></tr>`;
+
+  });
+
+  // Inject small scoped styles to enforce dark background and white text within the stats container
+  html += '<style>#orderStatsContainer *{ color:#fff !important; background:#0e141c !important; } #orderStatsContainer table{ background:transparent !important; border-collapse: separate !important; border-spacing: 0 8px !important; } #orderStatsContainer table th, #orderStatsContainer table td { color:#fff !important; border-bottom:1px solid rgba(255,255,255,0.06) !important; } #orderStatsContainer table td { background:#0e141c !important; } #orderStatsContainer .btn { color:#fff !important; }</style>';
+  html += '</tbody></table></div></div></div>';
+
+  container.innerHTML = html;
+}
+
+async function exportOrderStats() {
+  const select = document.getElementById('statsDaysSelect');
+  const days = select ? select.value : 30;
+  try {
+    const resp = await fetch(`/api/admin/orders/stats/daily?days=${days}`, { headers: { 'Authorization': `Bearer ${token}` } });
+    if (!resp.ok) { showMessage('Failed to export', 'error'); return; }
+    const json = await resp.json();
+    const rows = json.results || [];
+    if (!rows.length) { showMessage('No stats to export', 'error'); return; }
+    const headers = ['date','total','completed','failed'];
+    const csv = [headers.join(',')].concat(rows.map(r => `${r.date},${r.total},${r.completed},${r.failed}`)).join('\n');
+    const filename = `order-stats-${(new Date()).toISOString().slice(0,10)}.csv`;
+    downloadCSV(csv, filename);
+    showMessage('Exported order stats', 'success');
+  } catch (err) {
+    console.error('Export error', err);
+    showMessage('Export failed', 'error');
+  }
 }
 
 async function changeUserPassword(userId) {
