@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const Order = require('../models/Order');
+const Log = require('../models/Log');
 const { authMiddleware, adminMiddleware } = require('../middleware/auth');
 
 // Get all unlimited users
@@ -247,6 +248,51 @@ router.post('/daily-reset', authMiddleware, adminMiddleware, async (req, res) =>
     });
   } catch (error) {
     res.status(500).json({ message: 'Error processing daily reset', error: error.message });
+  }
+});
+
+// Add 1 day to subscriptionDaysRemaining for all unlimited users
+router.post('/add-day', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const unlimitedUsers = await User.find({ isUnlimited: true });
+    if (!Array.isArray(unlimitedUsers) || unlimitedUsers.length === 0) {
+      return res.json({ message: 'No unlimited users found', processed: 0 });
+    }
+
+    let processed = 0;
+    const updatedUsers = [];
+
+    for (const user of unlimitedUsers) {
+      user.unlimitedSettings.subscriptionDaysRemaining = (Number(user.unlimitedSettings.subscriptionDaysRemaining) || 0) + 1;
+      await user.save();
+      processed++;
+      updatedUsers.push({ id: user._id, username: user.username, subscriptionDaysRemaining: user.unlimitedSettings.subscriptionDaysRemaining });
+    }
+
+    // Record a log entry
+    const adminUser = await User.findById(req.userId).select('username email');
+    const log = new Log({
+      action: 'add_day_unlimited',
+      admin: { id: req.userId, username: adminUser ? adminUser.username : undefined, email: adminUser ? adminUser.email : undefined },
+      details: { processed, updatedUsers }
+    });
+
+    await log.save();
+
+    res.json({ message: 'Added 1 day to all unlimited users', processed, logId: log._id });
+  } catch (error) {
+    res.status(500).json({ message: 'Error adding day to unlimited users', error: error.message });
+  }
+});
+
+// Get recent unlimited-related logs
+router.get('/logs', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const limit = Math.min(200, parseInt(req.query.limit, 10) || 100);
+    const logs = await Log.find().sort({ createdAt: -1 }).limit(limit);
+    res.json(logs);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching logs', error: error.message });
   }
 });
 

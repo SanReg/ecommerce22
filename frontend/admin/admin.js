@@ -331,6 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Start checking for new tickets
   checkForNewTickets();
   loadUnlimitedUsers();
+  loadUnlimitedLogs();
 
   loadCodes();
   startOrderMonitoring();
@@ -381,6 +382,7 @@ function switchTab(tabName) {
     loadServiceStatus();
   } else if (tabName === 'unlimited') {
     loadUnlimitedUsers();
+    loadUnlimitedLogs();
   } else if (tabName === 'tickets') {
     loadTicketsAdmin();
   } else if (tabName === 'order-stats') {
@@ -1852,6 +1854,81 @@ async function loadUnlimitedUsers() {
   }
 }
 
+// Format log action into friendly human-readable message
+function formatLogMessage(action, admin, details) {
+  const processed = details && details.processed ? details.processed : 0;
+  switch (action) {
+    case 'add_day_unlimited':
+      return `<strong>${admin}</strong> added <strong>1 day</strong> to all unlimited users (${processed} users updated)`;
+    default:
+      return `<strong>${admin}</strong> performed action: ${action}`;
+  }
+}
+
+// Add 1 day to subscriptionDaysRemaining for all unlimited users (admin action)
+async function addDayToAllUnlimited() {
+  try {
+    const response = await fetch('/api/unlimited/add-day', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      showMessage(data.message || 'Operation completed', 'success');
+      // Refresh list and logs
+      loadUnlimitedUsers();
+      loadUnlimitedLogs();
+    } else {
+      showMessage(data.message || 'Failed to add day to unlimited users', 'error');
+    }
+  } catch (error) {
+    showMessage('Error adding day: ' + error.message, 'error');
+  }
+}
+
+// Load unlimited logs and render in admin
+async function loadUnlimitedLogs() {
+  try {
+    const response = await fetch('/api/unlimited/logs', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      showMessage(data.message || 'Could not load logs', 'error');
+      return;
+    }
+
+    const logsContainer = document.getElementById('unlimitedLogsContainer');
+    if (!logsContainer) return;
+
+    if (!Array.isArray(data) || data.length === 0) {
+      logsContainer.innerHTML = '<p style="color:#666; text-align:center;">No logs found</p>';
+      return;
+    }
+
+    let html = '<div style="display:flex; flex-direction:column; gap:0.75rem;">';
+
+    data.forEach(log => {
+      const t = new Date(log.createdAt).toLocaleString();
+      const adminEmail = log.admin && log.admin.email ? log.admin.email : (log.admin && log.admin.username ? log.admin.username : 'System');
+      const friendlyMessage = formatLogMessage(log.action, adminEmail, log.details);
+      html += `
+        <div style="display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 1rem; background:#f8fafc; border-radius:8px; border-left:4px solid #10b981;">
+          <span style="color:#64748b; font-size:0.85rem; white-space:nowrap;">${t}</span>
+          <span style="color:#1e293b; font-size:0.95rem;">${friendlyMessage}</span>
+        </div>
+      `;
+    });
+
+    html += '</div>';
+    logsContainer.innerHTML = html;
+  } catch (error) {
+    showMessage('Error loading logs: ' + error.message, 'error');
+  }
+}
+
 function displayUnlimitedUsers(users) {
   const container = document.getElementById('unlimitedUsersContainer');
   container.innerHTML = '';
@@ -1894,7 +1971,24 @@ function displayUnlimitedUsers(users) {
   if (formDiv) formDiv.id = 'convertBtn_form';
   
   container.appendChild(convertBtn);
-  
+
+  // Bulk controls: Add 1 day to all unlimited users
+  const bulkControls = document.createElement('div');
+  bulkControls.style.cssText = 'margin-bottom: 1.5rem; display:flex; gap:1rem; align-items:center; flex-wrap:wrap;';
+  bulkControls.innerHTML = `
+    <button id="addDayAllUnlimitedBtn" style="background:#10b981; color:white; padding:0.6rem 0.9rem; border-radius:8px; border:none; font-weight:600; cursor:pointer;">Add 1 Day to All Unlimited Users</button>
+  `;
+  container.appendChild(bulkControls);
+
+  // Wire up Add Day button
+  setTimeout(() => {
+    const addBtn = document.getElementById('addDayAllUnlimitedBtn');
+    if (addBtn) addBtn.addEventListener('click', () => {
+      if (!confirm('Add 1 day to subscription for ALL unlimited users? This action will be logged.')) return;
+      addDayToAllUnlimited();
+    });
+  }, 50);
+
   // Populate user dropdown with all non-unlimited users
   loadAllUsersForUnlimited();
 
@@ -2016,6 +2110,24 @@ function displayUnlimitedUsers(users) {
   document.head.appendChild(mobileStyle);
 
   container.appendChild(table);
+
+  // Logs section at bottom
+  const logsSection = document.createElement('div');
+  logsSection.style.cssText = 'margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid #444;';
+  logsSection.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+      <h3 style="margin:0; color:#fff;">Activity Logs</h3>
+      <button id="refreshUnlimitedLogsBtn" style="background:#3b82f6; color:white; padding:0.5rem 0.9rem; border-radius:8px; border:none; font-weight:600; cursor:pointer; font-size:0.85rem;">Refresh</button>
+    </div>
+    <div id="unlimitedLogsContainer" style="background:#fff; padding:1rem; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.06); max-height: 360px; overflow:auto;"><p style="color:#666; text-align:center;">Loading logs...</p></div>
+  `;
+  container.appendChild(logsSection);
+
+  // Wire up refresh logs button
+  setTimeout(() => {
+    const refreshBtn = document.getElementById('refreshUnlimitedLogsBtn');
+    if (refreshBtn) refreshBtn.addEventListener('click', () => loadUnlimitedLogs());
+  }, 50);
 }
 
 async function loadAllUsersForUnlimited() {
