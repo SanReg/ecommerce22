@@ -228,6 +228,19 @@ function getAvailableCredits() {
   return { total: regular, dailyAvailable: 0, regular };
 }
 
+function formatTurnitinValue(val) {
+  // Values are strings and may be numeric like "23" or an asterisk "*".
+  if (val === undefined || val === null || String(val).trim() === '') return 'N/A';
+  const s = String(val).trim();
+  if (s === '*') return '*';
+  // If it already contains a percent sign, return as-is
+  if (s.endsWith('%')) return s;
+  // If it's a plain number (integer or decimal), append '%'
+  if (/^\d+(?:\.\d+)?$/.test(s)) return s + '%';
+  // Fallback to raw string
+  return s;
+}
+
 async function loadBooks() {
   try {
     const response = await fetch('/api/products');
@@ -568,6 +581,11 @@ function displayUserOrders(orders, page = 1) {
         ${order.status === 'completed' ? `
           <div style="margin-bottom: 0;">
             <p style="color: #1f2937; font-weight: 600; margin: 0 0 0.8rem 0; font-size: 0.9rem;">📋 Admin Reports</p>
+            <!-- Show Turnitin scores when available -->
+            <div style="display: flex; gap: 0.6rem; margin-bottom: 0.6rem; align-items: center;">
+              <div style="background: #f3f4f6; padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.9rem; color: #1f2937;"><strong>AI Score:</strong> ${formatTurnitinValue(order.turnitin_score)}</div>
+              <div style="background: #f3f4f6; padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.9rem; color: #1f2937;"><strong>Similarity:</strong> ${formatTurnitinValue(order.turnitin_similarity)}</div>
+            </div>
             <div style="display: grid; gap: 0.8rem;">
               ${aiReportLink}
               ${similarityLink}

@@ -29,6 +29,16 @@ function refreshUsersView() {
   }
 }
 
+// Helper to format Turnitin values: numeric strings, '%' or '*' are handled
+function formatTurnitinValue(val) {
+  if (val === undefined || val === null || String(val).trim() === '') return 'N/A';
+  const s = String(val).trim();
+  if (s === '*') return '*';
+  if (s.endsWith('%')) return s;
+  if (/^\d+(?:\.\d+)?$/.test(s)) return s + '%';
+  return s;
+}
+
 // Play notification sound for new orders
 function playNotificationSound() {
   try {
@@ -539,6 +549,17 @@ function displayAllOrders(orders, page) {
             </div>
           </div>
         </div>
+
+        ${order.status === 'completed' ? `
+        <!-- Turnitin Scores (Admin view) -->
+        <div style="background: #fff; border-radius: 8px; padding: 0.8rem 1rem; margin-bottom: 1rem;">
+          <p style="margin: 0 0 0.5rem 0; color: #1f2937; font-weight: 600; font-size: 0.9rem;">📋 Turnitin Scores</p>
+          <div style="display: flex; gap: 0.6rem;">
+            <div style="background: #f3f4f6; padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.9rem; color: #1f2937;"><strong>AI Score:</strong> ${formatTurnitinValue(order.turnitin_score)}</div>
+            <div style="background: #f3f4f6; padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.9rem; color: #1f2937;"><strong>Similarity:</strong> ${formatTurnitinValue(order.turnitin_similarity)}</div>
+          </div>
+        </div>
+        ` : ''}
 
         ${order.status === 'failed' ? `
         <!-- Failure Details -->
