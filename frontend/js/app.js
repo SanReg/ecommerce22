@@ -580,7 +580,7 @@ function displayUserOrders(orders, page = 1) {
         <!-- Reports / Status Section -->
         ${order.status === 'completed' ? `
           <div style="margin-bottom: 0;">
-            <p style="color: #1f2937; font-weight: 600; margin: 0 0 0.8rem 0; font-size: 0.9rem;">📋 Admin Reports</p>
+            <p style="color: #1f2937; font-weight: 600; margin: 0 0 0.8rem 0; font-size: 0.9rem;">📋 Turnitin Reports</p>
             <!-- Show Turnitin scores when available -->
             <div style="display: flex; gap: 0.6rem; margin-bottom: 0.6rem; align-items: center;">
               <div style="background: #f3f4f6; padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.9rem; color: #1f2937;"><strong>AI Score:</strong> ${formatTurnitinValue(order.turnitin_score)}</div>
