@@ -532,6 +532,8 @@ function displayUserOrders(orders, page = 1) {
     const remainingMins = Math.floor(Math.max(0, remainingMs) / 60000);
     const remainingSecs = Math.floor((Math.max(0, remainingMs) % 60000) / 1000);
     
+    const bookTitle = (typeof order.book === 'string') ? order.book : (order.book && order.book.title ? order.book.title : 'Turnitin');
+    
     // User file link
     const userFileUrl = order.userFile && (order.userFile.url || order.userFile.secure_url || order.userFile.path);
     const userFileName = order.userFile && order.userFile.filename ? order.userFile.filename : 'No file';
@@ -556,7 +558,7 @@ function displayUserOrders(orders, page = 1) {
         <!-- Header -->
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
           <div>
-            <h3 style="color: #1f2937; font-size: 1.1rem; margin: 0 0 0.3rem 0; font-weight: 700;">${order.book.title}</h3>
+            <h3 style="color: #1f2937; font-size: 1.1rem; margin: 0 0 0.3rem 0; font-weight: 700;">${bookTitle}</h3>
             <code style="background: #f0f0f0; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; color: #666;">${order._id.substring(0, 12)}...</code>
           </div>
           <span class="status-badge ${statusClass}" style="font-size: 0.85rem; padding: 0.4rem 0.8rem; display: flex; align-items: center; gap: 0.4rem; background: ${order.status === 'failed' ? '#ef4444' : (order.status === 'completed' ? '#10b981' : '#f59e0b')}; color: #ffffff; border-radius: 6px;">${order.status === 'pending' ? `<img src="https://cdn.discordapp.com/emojis/1240447270634389568.gif" alt="processing" style="width: 20px; height: 20px;">processing` : order.status}</span>

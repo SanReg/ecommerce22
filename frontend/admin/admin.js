@@ -496,7 +496,7 @@ function displayAllOrders(orders, page) {
     const date = orderDateTime.toLocaleDateString();
     const time = orderDateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const userName = order.user && (order.user.username || order.user.email) ? (order.user.username || order.user.email) : 'Unknown User';
-    const bookTitle = order.book && order.book.title ? order.book.title : 'Unknown Service';
+    const bookTitle = (typeof order.book === 'string') ? order.book : (order.book && order.book.title ? order.book.title : 'Turnitin');
     const userEmail = order.user && order.user.email ? order.user.email : 'N/A';
     
     // File status indicators
@@ -1168,7 +1168,7 @@ function displayUserDetailsModal(data) {
 
       ordersHtml += `
         <li style="margin-bottom: 0.75rem; padding: 1rem; background: #f8f9fa; border-radius: 8px; color: #1f2937; border: 1px solid #e5e7eb;">
-          <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem;">${order.book.title}</div>
+          <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem;">${(typeof order.book === 'string') ? order.book : (order.book && order.book.title ? order.book.title : 'Turnitin')}</div>
           <div style="font-size: 0.9rem; color: #6b7280;">
             <span style="color: #10b981; font-weight: 600;">${order.checksUsed} Credits</span> • 
             <span style="color: ${order.status === 'completed' ? '#10b981' : (order.status === 'failed' ? '#ef4444' : '#f59e0b')}; font-weight: 600;">${order.status}</span>
@@ -2371,7 +2371,7 @@ function showUnlimitedUserDetailsModal(data) {
           <tbody>
             ${todayOrders.map(order => `
               <tr style="border-bottom: 1px solid #333;">
-                <td style="padding: 0.75rem;">${order.book}</td>
+                <td style="padding: 0.75rem;">${order.book ? (typeof order.book === 'string' ? order.book : (order.book.title || 'Turnitin')) : 'Turnitin'}</td>
                 <td style="padding: 0.75rem; color: ${order.dailyCreditsUsed > 0 ? '#10b981' : '#999'}; font-weight: bold;">${order.dailyCreditsUsed || 0}</td>
                 <td style="padding: 0.75rem; color: ${order.regularChecksUsed > 0 ? '#06b6d4' : '#999'}; font-weight: bold;">${order.regularChecksUsed || 0}</td>
                 <td style="padding: 0.75rem;">
