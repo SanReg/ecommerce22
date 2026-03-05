@@ -526,7 +526,7 @@ function displayUserOrders(orders, page = 1) {
     
     // Calculate ETA (20 minutes from creation)
     const createdTime = new Date(order.createdAt).getTime();
-    const eta = createdTime + (11 * 60 * 1000);
+    const eta = createdTime + (20 * 60 * 1000);
     const now = new Date().getTime();
     const remainingMs = eta - now;
     const remainingMins = Math.floor(Math.max(0, remainingMs) / 60000);
@@ -665,7 +665,7 @@ function initializeCountdownTimers() {
     if (!createdAt || !orderId) return;
     
     const createdTime = new Date(createdAt).getTime();
-    const eta = createdTime + (11 * 60 * 1000);
+    const eta = createdTime + (20 * 60 * 1000);
     
     function updateCountdown() {
       const now = new Date().getTime();
@@ -691,7 +691,7 @@ function initializeCountdownTimers() {
           parentDiv.style.borderColor = '#fca5a5';
           parentDiv.style.color = '#7f1d1d';
         }
-        element.textContent = 'Please refresh the page! If it still persists either the server is offline or there is a problem, contact support!';
+        element.textContent = 'If the issue persists, please refresh the page. It could be due to automation failure or a temporary problem. If it’s still not resolved within next 15 minutes, please contact support.';
         element.style.color = '#7f1d1d';
         element.style.fontWeight = '600';
         delete activeCountdowns[orderId];
