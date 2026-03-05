@@ -559,6 +559,7 @@ function displayAllOrders(orders, page) {
             <div style="background: #f3f4f6; padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.9rem; color: #1f2937;"><strong>Similarity:</strong> ${formatTurnitinValue(order.turnitin_similarity)}</div>
           </div>
         </div>
+        ${order.adminRemark ? `<p style="margin:0 0 1rem 0; color:#0f172a; font-size:0.9rem; font-weight:700; background:#f1f5f9; padding:0.5rem; border-radius:6px;"><strong>Admin remarks:</strong> ${order.adminRemark}</p>` : ''}
         ` : ''}
 
         ${order.status === 'failed' ? `
@@ -1453,10 +1454,27 @@ async function uploadOrderFiles(orderId, event) {
 }
 
 async function markComplete(orderId) {
+  // ask for an optional remark
+  let remark = prompt('Enter an optional remark for the user (leave blank to skip):');
+  if (remark === null) {
+    // user pressed cancel
+    return;
+  }
+  remark = remark.trim();
+  if (remark && remark.length < 3) {
+    alert('Remark must be at least 3 characters or leave blank');
+    showMessage('Remark too short', 'error');
+    return;
+  }
+
   try {
     const response = await fetch(`/api/admin/orders/${orderId}/complete`, {
       method: 'PUT',
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ remark })
     });
 
     const data = await response.json();

@@ -582,16 +582,18 @@ function displayUserOrders(orders, page = 1) {
         <!-- Reports / Status Section -->
         ${order.status === 'completed' ? `
           <div style="margin-bottom: 0;">
-            <p style="color: #1f2937; font-weight: 600; margin: 0 0 0.8rem 0; font-size: 0.9rem;">📋 Turnitin Reports</p>
+            ${((order.turnitin_score != null) || (order.turnitin_similarity != null) || aiReportUrl || similarityUrl) ? `<p style="color: #1f2937; font-weight: 600; margin: 0 0 0.8rem 0; font-size: 0.9rem;">📋 Turnitin Reports</p>` : ''}
             <!-- Show Turnitin scores when available -->
+            ${(order.turnitin_score != null || order.turnitin_similarity != null) ? `
             <div style="display: flex; gap: 0.6rem; margin-bottom: 0.6rem; align-items: center;">
-              <div style="background: #f3f4f6; padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.9rem; color: #1f2937;"><strong>AI Score:</strong> ${formatTurnitinValue(order.turnitin_score)}</div>
-              <div style="background: #f3f4f6; padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.9rem; color: #1f2937;"><strong>Similarity:</strong> ${formatTurnitinValue(order.turnitin_similarity)}</div>
-            </div>
+              ${order.turnitin_score != null ? `<div style="background: #f3f4f6; padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.9rem; color: #1f2937;"><strong>AI Score:</strong> ${formatTurnitinValue(order.turnitin_score)}</div>` : ''}
+              ${order.turnitin_similarity != null ? `<div style="background: #f3f4f6; padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.9rem; color: #1f2937;"><strong>Similarity:</strong> ${formatTurnitinValue(order.turnitin_similarity)}</div>` : ''}
+            </div>` : ''}
             <div style="display: grid; gap: 0.8rem;">
               ${aiReportLink}
               ${similarityLink}
             </div>
+            ${order.adminRemark ? `<div style="margin-top:0.75rem; color:#0f172a; font-weight:600; padding:0.6rem; background:#fef3c7; border-left:4px solid #f59e0b; border-radius:6px; font-size:0.9rem;"><strong>Admin note:</strong> ${order.adminRemark}</div>` : ''}
           </div>
         ` : (order.status === 'failed' ? `
           <div style="padding: 1rem; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px; color: #7f1d1d;">

@@ -68,6 +68,11 @@ const orderSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  // optional remark entered by admin when marking order complete
+  adminRemark: {
+    type: String,
+    default: ''
+  },
   refundAmount: {
     type: Number,
     default: 0

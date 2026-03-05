@@ -243,9 +243,18 @@ Response: 200 OK
 ```
 
 ### Mark Order as Complete
+
+Admin may send an **optional remark** when completing an order. The remark will be stored on the order and visible to the user if present.
+
 ```
 PUT /admin/orders/:id/complete
 Authorization: Bearer <admin_token>
+Content-Type: application/json
+
+Request body (optional):
+{
+  "remark": "Your custom message to the user"
+}
 
 Response: 200 OK
 {
@@ -254,6 +263,7 @@ Response: 200 OK
     "_id": "507f1f77bcf86cd799439012",
     "status": "completed",
     "completedAt": "2024-12-15T10:05:00.000Z",
+    "adminRemark": "Your custom message to the user",
     ...
   }
 }

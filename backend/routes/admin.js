@@ -86,7 +86,7 @@ router.get('/orders/stats/daily', authMiddleware, adminMiddleware, async (req, r
   }
 });
 
-// Mark order as complete
+// Mark order as complete (optional admin remark)
 router.put('/orders/:id/complete', authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
@@ -97,6 +97,11 @@ router.put('/orders/:id/complete', authMiddleware, adminMiddleware, async (req, 
     
     order.status = 'completed';
     order.completedAt = new Date();
+    // store optional remark if provided
+    const remark = (req.body.remark || '').trim();
+    if (remark) {
+      order.adminRemark = remark;
+    }
     await order.save();
     
     res.json({ message: 'Order marked as completed', order });
