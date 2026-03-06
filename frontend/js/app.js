@@ -277,7 +277,7 @@ function displayServices() {
   const turnitinAvailable = !!turnitin;
   cardTurnitin.innerHTML = `
     <div style="margin-bottom: 1.5rem;">
-      <div style="font-size: 2.5rem; margin-bottom: 1rem;">🔍</div>
+      <img src="https://img.icons8.com/fluent/150/turnitin.jpg" alt="Turnitin" style="width: 60px; height: 60px; margin-bottom: 1rem; border-radius: 12px;">
       <h3 style="font-size: 1.3rem; margin-bottom: 0.75rem; color: var(--text-primary);">Turnitin Check</h3>
       <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">We provide similarity and AI detection reports generated through Turnitin, helping you review your work before final submission.<br><em>Files are not stored in Turnitin!<em></p>
     </div>
